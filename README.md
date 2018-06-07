@@ -25,41 +25,34 @@ These data were published here:
 cd /Users/siljanen/Documents/MiSeq_data_LCG/LGC_G20002861_part1/PrimerClipped/Henri_AOA_amoA/Peat_soil_DNA/Raw_R1R2
 bzip2 -d *.bz2
 ```
+#### 2) DADA2 pipeline
 
-#### 2) Set-up the R environ
-
-# start up using dada2
-
+##### 2.1) Set-up the R environment
+* Load DADA2
+```
 library("dada2")
-
-citation("dada2")
-
-
-# Set working directory
-# Modify accordingly
+```
+* Set the working directory
+```
 setwd("/Users/siljanen/Documents/AA_MiSeq_data_LCG/LGC_G20002861_part1/PrimerClipped/Henri_AOA_amoA/Peat_soil_DNA/Raw_R1R2") 
-
-
-# Define path variable for the fastq files
+```
+* Define path variable for the fastq files
+```
 path <- "/Users/siljanen/Documents/AA_MiSeq_data_LCG/LGC_G20002861_part1/PrimerClipped/Henri_AOA_amoA/Peat_soil_DNA/Raw_R1R2"
 list.files(path)
+```
 
+##### 2.2) Filtering and trimming
 
-
-## FILTERING AND TRIMMING
-
+```
 # Extracting samples names
 fnFs <- sort(list.files(path, pattern="_R1.fastq", full.names = TRUE))
 fnRs <- sort(list.files(path, pattern="_R2.fastq", full.names = TRUE))
 
-
 sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
 
-
-
-View(sample.names)
-#or 
 sample.names
+```
 
 ## Set up the replicates list and replicates groups based on samples.names
 #Surface only New set of samples with Tazorvsky:
