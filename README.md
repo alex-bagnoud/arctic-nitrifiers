@@ -22,8 +22,7 @@ These data were published here:
 * Convert the fastq files into fastq (on the terminal):
 
 ```
-cd /Users/siljanen/Documents/MiSeq_data_LCG/LGC_G20002861_part1/PrimerClipped/Henri_AOA_amoA/Peat_soil_DNA/Raw_R1R2
-bzip2 -d *.bz2
+bzip2 -d 0/raw_data*.bz2
 ```
 #### 2) DADA2 pipeline
 
@@ -34,14 +33,15 @@ This part is was written based on the [DADA2 tutorial](https://benjjneb.github.i
 ```
 library("dada2")
 ```
-* Set the working directory
-```
-setwd("/Users/siljanen/Documents/AA_MiSeq_data_LCG/LGC_G20002861_part1/PrimerClipped/Henri_AOA_amoA/Peat_soil_DNA/Raw_R1R2") 
-```
 * Define the path variable for the fastq files
 ```
-path <- "/Users/siljanen/Documents/AA_MiSeq_data_LCG/LGC_G20002861_part1/PrimerClipped/Henri_AOA_amoA/Peat_soil_DNA/Raw_R1R2"
-list.files(path)
+path <- "0-raw_data/"list.files(path)
+ [1] "peat02_R1.fastq" "peat02_R2.fastq" "peat05_R1.fastq" "peat05_R2.fastq" "peat08_R1.fastq" "peat08_R2.fastq" "peat17_R1.fastq"
+ [8] "peat17_R2.fastq" "peat30_R1.fastq" "peat30_R2.fastq" "peat31_R1.fastq" "peat31_R2.fastq" "peat32_R1.fastq" "peat32_R2.fastq"
+[15] "peat33_R1.fastq" "peat33_R2.fastq" "peat38_R1.fastq" "peat38_R2.fastq" "peat39_R1.fastq" "peat39_R2.fastq" "peat63_R1.fastq"
+[22] "peat63_R2.fastq" "peat64_R1.fastq" "peat64_R2.fastq" "peat65_R1.fastq" "peat65_R2.fastq" "peat66_R1.fastq" "peat66_R2.fastq"
+[29] "peat67_R1.fastq" "peat67_R2.fastq" "peat69_R1.fastq" "peat69_R2.fastq" "peat71_R1.fastq" "peat71_R2.fastq" "peat77_R1.fastq"
+[36] "peat77_R2.fastq"
 ```
 
 ##### 2.2) Filtering and trimming
@@ -51,11 +51,14 @@ fnFs <- sort(list.files(path, pattern="_R1.fastq", full.names = TRUE))
 
 sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
 sample.names
+ [1] "peat02" "peat05" "peat08" "peat17" "peat30" "peat31" "peat32" "peat33" "peat38" "peat39" "peat63" "peat64" "peat65" "peat66" "peat67"
+[16] "peat69" "peat71" "peat77"
 ```
-* Read quality vizualisation of some samples
+* Read quality vizualisation of the R1 samples
 ```
-plotQualityProfile(fnFs[1:12]) # Visualize the quality of other samples by modifying the numbers in bracket.
+plotQualityProfile(fnFs[1:18])
 ```
+[](plots/quality_plots.png)
 * Read filtering and trimming
 ```
 filt_path <- file.path("1-filtered_reads")
