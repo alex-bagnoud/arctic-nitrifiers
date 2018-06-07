@@ -36,12 +36,12 @@ library("dada2")
 * Define the path variable for the fastq files
 ```
 path <- "0-raw_data/"list.files(path)
- [1] "peat02_R1.fastq" "peat02_R2.fastq" "peat05_R1.fastq" "peat05_R2.fastq" "peat08_R1.fastq" "peat08_R2.fastq" "peat17_R1.fastq"
- [8] "peat17_R2.fastq" "peat30_R1.fastq" "peat30_R2.fastq" "peat31_R1.fastq" "peat31_R2.fastq" "peat32_R1.fastq" "peat32_R2.fastq"
-[15] "peat33_R1.fastq" "peat33_R2.fastq" "peat38_R1.fastq" "peat38_R2.fastq" "peat39_R1.fastq" "peat39_R2.fastq" "peat63_R1.fastq"
-[22] "peat63_R2.fastq" "peat64_R1.fastq" "peat64_R2.fastq" "peat65_R1.fastq" "peat65_R2.fastq" "peat66_R1.fastq" "peat66_R2.fastq"
-[29] "peat67_R1.fastq" "peat67_R2.fastq" "peat69_R1.fastq" "peat69_R2.fastq" "peat71_R1.fastq" "peat71_R2.fastq" "peat77_R1.fastq"
-[36] "peat77_R2.fastq"
+##  [1] "peat02_R1.fastq" "peat02_R2.fastq" "peat05_R1.fastq" "peat05_R2.fastq" "peat08_R1.fastq" "peat08_R2.fastq" "peat17_R1.fastq"
+##  [8] "peat17_R2.fastq" "peat30_R1.fastq" "peat30_R2.fastq" "peat31_R1.fastq" "peat31_R2.fastq" "peat32_R1.fastq" "peat32_R2.fastq"
+## [15] "peat33_R1.fastq" "peat33_R2.fastq" "peat38_R1.fastq" "peat38_R2.fastq" "peat39_R1.fastq" "peat39_R2.fastq" "peat63_R1.fastq"
+## [22] "peat63_R2.fastq" "peat64_R1.fastq" "peat64_R2.fastq" "peat65_R1.fastq" "peat65_R2.fastq" "peat66_R1.fastq" "peat66_R2.fastq"
+## [29] "peat67_R1.fastq" "peat67_R2.fastq" "peat69_R1.fastq" "peat69_R2.fastq" "peat71_R1.fastq" "peat71_R2.fastq" "peat77_R1.fastq"
+## [36] "peat77_R2.fastq"
 ```
 
 ##### 2.2) Filtering and trimming
@@ -51,14 +51,14 @@ fnFs <- sort(list.files(path, pattern="_R1.fastq", full.names = TRUE))
 
 sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
 sample.names
- [1] "peat02" "peat05" "peat08" "peat17" "peat30" "peat31" "peat32" "peat33" "peat38" "peat39" "peat63" "peat64" "peat65" "peat66" "peat67"
-[16] "peat69" "peat71" "peat77"
+##  [1] "peat02" "peat05" "peat08" "peat17" "peat30" "peat31" "peat32" "peat33" "peat38" "peat39" "peat63" "peat64" "peat65" "peat66" "peat67"
+## [16] "peat69" "peat71" "peat77"
 ```
 * Read quality vizualisation of the R1 samples
 ```
 plotQualityProfile(fnFs[1:18])
 ```
-[](plots/quality_plots.png)
+![](plots/quality_plots.png)
 * Read filtering and trimming
 ```
 filt_path <- file.path("1-filtered_reads")
@@ -66,9 +66,28 @@ filtFs <- file.path(filt_path, paste0(sample.names, "_F_filt.fastq.gz"))
 
 out <- filterAndTrim(fnFs, filtFs,  truncLen=c(200),
                      maxN=0, maxEE=c(2), truncQ=2, rm.phix=TRUE,
-                     compress=TRUE, multithread=TRUE) # Modify accordingly
+                     compress=TRUE, multithread=TRUE)
 
 out
+##                 reads.in reads.out
+## peat02_R1.fastq    27545     24097
+## peat05_R1.fastq    62157     56235
+## peat08_R1.fastq    48088     42919
+## peat17_R1.fastq     2009       945
+## peat30_R1.fastq     2608      1493
+## peat31_R1.fastq     2382      1185
+## peat32_R1.fastq    97910     83619
+## peat33_R1.fastq      889       220
+## peat38_R1.fastq    57572     52295
+## peat39_R1.fastq    47724     42763
+## peat63_R1.fastq     1020       124
+## peat64_R1.fastq   205837    186203
+## peat65_R1.fastq   412142    368307
+## peat66_R1.fastq     3898      3591
+## peat67_R1.fastq     1299      1120
+## peat69_R1.fastq      193       164
+## peat71_R1.fastq    27046     23293
+## peat77_R1.fastq       45        11
 ```
 
 ##### 2.3) Learn the error rates
