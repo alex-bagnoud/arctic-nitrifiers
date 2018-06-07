@@ -163,18 +163,17 @@ track
 ## peat71  27046    23293    23201  23201   20168
 ## peat77     45       11        9      9       9
 
-dir.create("2-dada2")
-write.table(track, "2-dada2/1-track.txt", quote = FALSE, sep = "\t", col.names = NA)
+write.table(track, "1-track.txt", quote = FALSE, sep = "\t", col.names = NA)
 ```
 
 ##### 2.8) Export data
 * fasta of uniques non-chimeric reads
 ```
-uniquesToFasta(getUniques(seqtab.nochim), "2-dada2/2-uniques_nochim.fasta")
+uniquesToFasta(getUniques(seqtab.nochim), "2-uniques_nochim.fasta")
 ```
 * ASV table
 ```
-write.table(t(seqtab.nochim), "2-dada2/3-asv_table.txt", sep="\t", row.names=TRUE, col.names=NA, quote=FALSE)
+write.table(t(seqtab.nochim), "3-asv_table.txt", sep="\t", row.names=TRUE, col.names=NA, quote=FALSE)
 ```
 
 #### 3) Further chimera filtration and annotations of ASVs sequences (in the terminal)
@@ -191,98 +190,37 @@ chimera_db="databases/j_AamoA_chimera.ref.db_aln.trim.fasta"
 ```
 usearch8 -usearch_global 2-uniques_nochim.fasta -db $db_seq -id 0.55 -strand plus \
 -uc 4a-uclust_report.txt -matched 4b-uniques_nochim_match.fasta -notmatched 4c-uniques_nochim_nomatch.fasta
-
+## 100.0% Searching, 63.4% matched
 ```
-# 78.8% matched (dada2, F=200bp R=200bp)
-# 49.3%  matched (dada2, F=200bp R=150bp)
-# 2.5% matched (dada2, F=150bp R=150bp)
-#  58.1% matched (dada2, F only 200bp)
-# With Taz =  55.7% matched (dada2, F only 200bp)
 
 ### 3.2) UCHIME chimera filtration (using parameters defined by [Alves et al., 2018](https://www.nature.com/articles/s41467-018-03861-1))
 
 For this step, USEARCH v.8 must be used. The latter versions use UCHIME2 instead of UCHIME, for which it is not possible anymore to specifiy the ```-mindiv``` and ```-minh```.
-
+```
 usearch8 -uchime_ref  4b-uniques_nochim_match.fasta -db $chimera_db \
 -nonchimeras 5a-uniques_nochim_match_uchimed.fasta -strand plus -mindiv 1.7 -minh 0.1 -uchimeout 5b-uchime_report.txt
-# Found 19/128 chimeras (14.8%), 42 not classified (32.8%) (min1) 
-# Found 12/327 chimeras (3.7%), 304 not classified (93.0%) (dada2,  F=200bp R=200bp)
-# Found 64/145 chimeras (44.1%), 70 not classified (48.3%) (dada2,  F=200bp R=150bp)
-#  Found 0/7 chimeras (0.0%), 7 not classified (100.0%) (dada2,  F=150bp R=150bp)
-# Found 2/93 chimeras (2.2%), 36 not classified (38.7%) (dada2, F only 200bp)
-## With Taz:  Found 2/117 chimeras (1.7%), 46 not classified (39.3%)
+## 100.0% Found 2/161 chimeras (1.2%), 59 not classified (36.6%)
+```
 
-### 9) Annotation of the OTUs
+### 3.3) Annotation of the OTUs (with UCLUST implemented in QIIME1)
 
-# 9.1) With UCLUST implemented in QIIME1
-
+```
 source activate qiime1
 assign_taxonomy.py -i 5a-uniques_nochim_match_uchimed.fasta -t $qiime_tax -r $db_seq --similarity 0.8 \
 -o 6-uniques_nochim_match_uchimed_uclust_annotation/
 source deactivate qiime1
-
-# Number of uniques annotations
+```
+* What is the number of unique annotations?
+```
 less 6-uniques_nochim_match_uchimed_uclust_annotation/5a-uniques_nochim_match_uchimed_tax_assignments.txt | cut -f2 | sort -u | wc -l
-#  6 (dada2,  F=200bp R=200bp)
-#  6 (dada2,  F=200bp R=150bp)
-#  8 (dada2, F only 200bp)
-# With Taz:  9  (dada2, F only 200bp)
+##  9
+```
 
-# Number of Unassigned OTUs
+* How many unassigned ASVs there is?
+```
 grep -c Unassigned 6-uniques_nochim_match_uchimed_uclust_annotation/5a-uniques_nochim_match_uchimed_tax_assignments.txt
-#  11 (dada2,  F=200bp R=200bp)
-#  10 (dada2,  F=200bp R=150bp)
-# 0 (dada2, F only 200bp)
-# With Taz:  0  (dada2, F only 200bp)
-
-### 10) Check the chimeric nature of the unassigned OTUs.
-
-#make amoA databases free of gaps in alignment:
-less $chimera_db | sed 's/-//g' > temp2-amoa_chimera_db_nogaps.fasta
-less $db_seq | sed 's/-//g' > temp-amoa_ref_db_nogaps.fasta
-
-
-# Make blast database 
-makeblastdb -in temp2-amoa_chimera_db_nogaps.fasta -out temp5-amoa_chimera_db -dbtype nucl
-makeblastdb -in temp-amoa_ref_db_nogaps.fasta -out temp5-amoa_db -dbtype nucl
-
-
-# Make the fast flat (for easier selection of OTUs) 
-less 5a-uniques_nochim_match_uchimed.fasta | \
-awk -v RS='>'     -v FS="\n"     -v OFS=""     -v ORS="" '{ if (NR > 1) { printf ">%s\n",$1; $1=""; printf "%s\n",$0 } }' \
-> 5c-uniques_nochim_match_uchimed_flat.fasta
-
-# List of unassigned OTUs from UCLUST annotation
-grep Unassigned 6-uniques_nochim_match_uchimed_uclust_annotation/5a-uniques_nochim_match_uchimed_tax_assignments.txt | cut -f1 > temp6a-unassigned_uclust_dada2_otu_list.txt
-
-
-# Extract the unassigned sequences from the flat fast file for UCLUST annotations
-grep -A1 -f temp6a-unassigned_uclust_dada2_otu_list.txt 5c-uniques_nochim_match_uchimed_flat.fasta \
-| grep -v "^--" > 7-unassigned_uclust_dada2_nochim_amoa_otus.fasta
-
-# Run blast (UCLUST)
-
-blastn -query 7-unassigned_uclust_dada2_nochim_amoa_otus.fasta -db temp5-amoa_chimera_db -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qseq" -out 8a-blast_outfmt6_report_unassigned.txt
-echo -e "qseqid\tsseqid\tpident\tlength\tmismatch\tgapopen\tqstart\tqend\tsstart\tsend\tevalue\tbitscore\tqseq" >> 8a-blast_outfmt6_report_unassigned.txt
-
-blastn -query 7-unassigned_uclust_dada2_nochim_amoa_otus.fasta -db temp5-amoa_chimera_db -outfmt 0 -out 8b-blast_report_unassigned_uclust_dada2_otus.txt
-
-## Outcome all unassigned have got blast result only for another end of the sequence. So, these unassigned ones we can exclude. 
-
-
-blastn -query 5c-uniques_nochim_match_uchimed_flat.fasta  -db temp5-amoa_chimera_db -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore" -out 8c-blast_outfmt6_report_assigned.txt
-echo -e "qseqid\tsseqid\tpident\tlength\tmismatch\tgapopen\tqstart\tqend\tsstart\tsend\tevalue\tbitscore" >> 8c-blast_outfmt6_report_assigned.txt
-
-blastn -query 5c-uniques_nochim_match_uchimed_flat.fasta -db temp5-amoa_chimera_db -outfmt 0 -out 8d-blast_report_assigned_uclust_dada2_otus.txt
-
-## Outcome all assigned have got blast result only for R1 sequence. Maybe E-value for R2 is lower because the length of the seq is smaller for R2. 
-
-
-# Carefully review the BLAST alignements and determine if the OTUs sequences are artefacts or not.
-# If some are, manually remove them from the file '5c-uniques_nochim_match_uchimed_flat.fasta'
-# and save it as '9-clean_asvs_dada2.fasta'
-
-"""
+## 0
+```
 
 # Import annotation file
 annot <- read.table("/Users/siljanen/Documents/AA_MiSeq_data_LCG/LGC_G20002861_part1/PrimerClipped/Henri_AOA_amoA/Peat_soil_DNA/Raw_R1R2/2-dada2/
