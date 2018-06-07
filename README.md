@@ -115,23 +115,25 @@ dadaFs <- dada(derepFs, err=errF, multithread=TRUE)
 ```
 seqtab <- makeSequenceTable(dadaFs, derepFs)
 dim(seqtab)
+## [1]  18 319
 ```
 * Inspect distribution of sequence lengths
 ```
 table(nchar(getSequences(seqtab)))
 ## 200 
+## 319
 ```
 
 ##### 2.6) *denovo* chimera removal
 ```
 seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
-## Identified 55 bimeras out of 265 input sequences.
+## Identified 65 bimeras out of 319 input sequences.
 
 dim(seqtab.nochim)
-## 18 210
+## 18 254
 
 sum(seqtab.nochim)/sum(seqtab) # What is the fraction of reads that were not discarded?
-## 0.9888035
+## [1] 0.9871345
 ```
 ##### 2.7) Track the reads through the DADA2 pipeline
 ```
@@ -141,6 +143,25 @@ track <- cbind(out, sapply(dadaFs, getN), rowSums(seqtab), rowSums(seqtab.nochim
 colnames(track) <- c("input", "filtered", "denoised", "tabled", "nonchim")
 rownames(track) <- sample.names
 track
+##         input filtered denoised tabled nonchim
+## peat02  27545    24097    24077  24077   23428
+## peat05  62157    56235    56091  56091   55770
+## peat08  48088    42919    42897  42897   42897
+## peat17   2009      945      914    914     914
+## peat30   2608     1493     1484   1484    1484
+## peat31   2382     1185     1165   1165    1165
+## peat32  97910    83619    83246  83246   82925
+## peat33    889      220      212    212     212
+## peat38  57572    52295    52261  52261   52154
+## peat39  47724    42763    42717  42717   42251
+## peat63   1020      124      111    111     111
+## peat64 205837   186203   185917 185917  185168
+## peat65 412142   368307   368100 368100  362337
+## peat66   3898     3591     3586   3586    3580
+## peat67   1299     1120     1106   1106    1106
+## peat69    193      164      163    163     163
+## peat71  27046    23293    23201  23201   20168
+## peat77     45       11        9      9       9
 
 dir.create("2-dada2")
 write.table(track, "2-dada2/1-track.txt", quote = FALSE, sep = "\t", col.names = NA)
