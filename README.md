@@ -180,7 +180,7 @@ usearch8 -usearch_global 2-uniques_nochim.fasta -db $db_seq -id 0.55 -strand plu
 
 ### 3.2) UCHIME chimera filtration (using parameters defined by [Alves et al., 2018](https://www.nature.com/articles/s41467-018-03861-1))
 
-For this step USEARCH v.8 must be used, because in the latter version, it is not possible anymore to specifiy the ```-mindiv``` and ```-minh``` parameters of ```-uchime_ref```.
+For this step, USEARCH v.8 must be used. The latter versions use UCHIME2 instead of UCHIME, for which it is not possible anymore to specifiy the ```-mindiv``` and ```-minh```.
 
 usearch8 -uchime_ref  4b-uniques_nochim_match.fasta -db $chimera_db \
 -nonchimeras 5a-uniques_nochim_match_uchimed.fasta -strand plus -mindiv 1.7 -minh 0.1 -uchimeout 5b-uchime_report.txt
