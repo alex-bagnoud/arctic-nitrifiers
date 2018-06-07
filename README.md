@@ -186,14 +186,14 @@ mothur_tax="databases/f_AamoA.db_nr_aln_taxonomy_mothur.txt"
 chimera_db="databases/j_AamoA_chimera.ref.db_aln.trim.fasta"
 ```
 
-### 3.1) Discard all sequences that share less than 55% identity with any reference sequences
+##### 3.1) Discard all sequences that share less than 55% identity with any reference sequences
 ```
 usearch8 -usearch_global 2-uniques_nochim.fasta -db $db_seq -id 0.55 -strand plus \
 -uc 4a-uclust_report.txt -matched 4b-uniques_nochim_match.fasta -notmatched 4c-uniques_nochim_nomatch.fasta
 ## 100.0% Searching, 63.4% matched
 ```
 
-### 3.2) UCHIME chimera filtration (using parameters defined by [Alves et al., 2018](https://www.nature.com/articles/s41467-018-03861-1))
+##### 3.2) UCHIME chimera filtration (using parameters defined by [Alves et al., 2018](https://www.nature.com/articles/s41467-018-03861-1))
 
 For this step, USEARCH v.8 must be used. The latter versions use UCHIME2 instead of UCHIME, for which it is not possible anymore to specifiy the ```-mindiv``` and ```-minh```.
 ```
@@ -202,7 +202,7 @@ usearch8 -uchime_ref  4b-uniques_nochim_match.fasta -db $chimera_db \
 ## 100.0% Found 2/161 chimeras (1.2%), 59 not classified (36.6%)
 ```
 
-### 3.3) Annotation of the OTUs (with UCLUST implemented in QIIME1)
+##### 3.3) Annotation of the OTUs (with UCLUST implemented in QIIME1)
 
 ```
 source activate qiime1
@@ -213,7 +213,7 @@ source deactivate qiime1
 * What is the number of unique annotations?
 ```
 less 6-uniques_nochim_match_uchimed_uclust_annotation/5a-uniques_nochim_match_uchimed_tax_assignments.txt | cut -f2 | sort -u | wc -l
-##  9
+## 9
 ```
 
 * How many unassigned ASVs there is?
