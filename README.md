@@ -38,7 +38,7 @@ library("dada2")
 ```
 setwd("/Users/siljanen/Documents/AA_MiSeq_data_LCG/LGC_G20002861_part1/PrimerClipped/Henri_AOA_amoA/Peat_soil_DNA/Raw_R1R2") 
 ```
-* Define path variable for the fastq files
+* Define the path variable for the fastq files
 ```
 path <- "/Users/siljanen/Documents/AA_MiSeq_data_LCG/LGC_G20002861_part1/PrimerClipped/Henri_AOA_amoA/Peat_soil_DNA/Raw_R1R2"
 list.files(path)
@@ -48,7 +48,6 @@ list.files(path)
 * Extracting sample names
 ```
 fnFs <- sort(list.files(path, pattern="_R1.fastq", full.names = TRUE))
-fnRs <- sort(list.files(path, pattern="_R2.fastq", full.names = TRUE))
 
 sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
 sample.names
@@ -61,7 +60,6 @@ plotQualityProfile(fnFs[1:12]) # Visualize the quality of other samples by modif
 ```
 filt_path <- file.path("1-filtered_reads")
 filtFs <- file.path(filt_path, paste0(sample.names, "_F_filt.fastq.gz"))
-
 
 out <- filterAndTrim(fnFs, filtFs,  truncLen=c(200),
                      maxN=0, maxEE=c(2), truncQ=2, rm.phix=TRUE,
@@ -89,57 +87,50 @@ names(derepFs) <- sample.names
 dadaFs <- dada(derepFs, err=errF, multithread=TRUE)
 ```
 
-## CONSTRUCT SEQUENCE TABLE
-
+##### 2.6) Construct sequence table
+```
 seqtab <- makeSequenceTable(dadaFs, derepFs)
 dim(seqtab)
-# Surface without Taz  = 12 207
-# New: with Taz samples  = 18 265
-
-# Inspect distribution of sequence lengths
+```
+* Inspect distribution of sequence lengths
+```
 table(nchar(getSequences(seqtab)))
-# 200 
-#    207 
+## 200 
+```
 
-## With Taz:
-#  200 
-#      265 
-
-## REMOVE CHIMERAS
-
+##### 2.6) *denovo* chimera removal
+```
 seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
-# Identified 47 bimeras out of 207 input sequences.
-# With Taz  = Identified 55 bimeras out of 265 input sequences.
+## Identified 55 bimeras out of 265 input sequences.
+
 dim(seqtab.nochim)
-# [1]  12 160
-#  With Taz:  18 210
+## 18 210
 
-sum(seqtab.nochim)/sum(seqtab)
-# 1] 0.9866975
-# With Taz = 0.9888035
-
-
-
-## TRACK THE READS THROUGH THE PIPELINE
-
+sum(seqtab.nochim)/sum(seqtab) # What is the fraction of reads that were not discarded?
+## 0.9888035
+```
+##### 2.7) Track the reads through the DADA2 pipeline
+```
 getN <- function(x) sum(getUniques(x))
 track <- cbind(out, sapply(dadaFs, getN), rowSums(seqtab), rowSums(seqtab.nochim))
 
-# If processing a single sample, remove the sapply calls: e.g. replace sapply(dadaFs, getN) with getN(dadaFs)
 colnames(track) <- c("input", "filtered", "denoised", "tabled", "nonchim")
 rownames(track) <- sample.names
 track
 
 dir.create("2-dada2")
 write.table(track, "2-dada2/1-track.txt", quote = FALSE, sep = "\t", col.names = NA)
+```
 
-## EXPORT DATA
-
-# fasta of uniques non-chimeric reads
+##### 2.8) Export data
+* fasta of uniques non-chimeric reads
+```
 uniquesToFasta(getUniques(seqtab.nochim), "2-dada2/2-uniques_nochim.fasta")
-
-# ASV table
+```
+* ASV table
+```
 write.table(t(seqtab.nochim), "2-dada2/3-asv_table.txt", sep="\t", row.names=TRUE, col.names=NA, quote=FALSE)
+```
 
 ## ANNOTATION OF UNIQUES READS WITH DATABASE (on the terminal)
 
