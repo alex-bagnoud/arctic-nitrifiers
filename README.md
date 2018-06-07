@@ -95,6 +95,7 @@ out
 errF <- learnErrors(filtFs, multithread=TRUE)
 plotErrors(errF, nominalQ=TRUE)
 ```
+![](plots/error_plots.png)
 
 ##### 2.4) Dereplication
 ```
