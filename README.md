@@ -11,6 +11,7 @@ These data were published here:
 * DADA2 v1.6.0 (https://benjjneb.github.io/dada2/index.html)
 * QIIME1 v1.9.1 (http://qiime.org/)
 * R v.3.4.4 and packages
+* USEARCH v.8 (https://www.drive5.com/usearch/)
 
 #### Database used:
 * Alves et al., 2018, Nature Communications (Supplementary Information)
@@ -24,7 +25,7 @@ These data were published here:
 ```
 bzip2 -d 0/raw_data*.bz2
 ```
-#### 2) DADA2 pipeline
+#### 2) DADA2 pipeline (in R)
 
 This part is was written based on the [DADA2 tutorial](https://benjjneb.github.io/dada2/tutorial.html)
 
@@ -155,75 +156,31 @@ uniquesToFasta(getUniques(seqtab.nochim), "2-dada2/2-uniques_nochim.fasta")
 write.table(t(seqtab.nochim), "2-dada2/3-asv_table.txt", sep="\t", row.names=TRUE, col.names=NA, quote=FALSE)
 ```
 
-## ANNOTATION OF UNIQUES READS WITH DATABASE (on the terminal)
+#### 3) Further chimera filtration and annotations of ASVs sequences (in the terminal)
 
-#################################################################################################
+* Set-up path to databases files
+```
+db_seq="databases/d_AamoA.db_nr_aln.fasta"
+qiime_tax="databases/e_AamoA.db_nr_aln_taxonomy_qiime.txt"
+mothur_tax="databases/f_AamoA.db_nr_aln_taxonomy_mothur.txt"
+chimera_db="databases/j_AamoA_chimera.ref.db_aln.trim.fasta"
+```
 
-# First: Install qiime1  (This protocol is for MacBook, PC might have different commands.)
-## Install before miniconda 2.7.
-
-# Download miniconda3 from website: 
-##    https://conda.io/miniconda.html
-
-cd /Users/siljanen/Downloads
-bash Miniconda2-latest-MacOSX-x86_64.sh
-
-# accept Licence agreement and answer "yes" to following question (this keeps miniconda3 active all the time at background):
-# "Do you wish the installer to prepend the Miniconda3 install location
-#  to PATH in your /Users/siljanen/.bash_profile ? [yes|no]"
-#  If you answer "no", then you need activate miniconda each time you want use it. Like this: 
-#  export PATH=/Users/siljanen/miniconda3/bin:$PATH
-
-
-##  Now open new Terminal window, because this is need for activation of miniconda
-# Then just install qiime1
-
-
-
-conda create -n qiime1 python=2.7 qiime matplotlib=1.4.3 mock nose -c bioconda
-
-# To activate this environment, use:
-# > source activate qiime1
-#
-# To deactivate an active environment, use:
-# > source deactivate
-
-
-# Optional way to install qiime1:
-
-conda config --add channels defaults
-conda config --add channels conda-forge
-conda config --add channels bioconda
-
-conda install qiime
-
-#################################################################################################
-
-
-"""
-cd /Users/siljanen/Documents/AA_MiSeq_data_LCG/LGC_G20002861_part1/PrimerClipped/Henri_AOA_amoA/Peat_soil_DNA/Raw_R1R2/2-dada2/
-
-
-# with usearch -pipeline: (from usearch_v5_aoa_18-04-2018.sh)
-# Change to path to the database file accordingly
-db_seq="/Users/siljanen/Documents/AA_MiSeq_data_LCG/ricardos_database/Supplementary_Data_1_Databases_Trees/d_AamoA.db_nr_aln.fasta"
-qiime_tax="/Users/siljanen/Documents/AA_MiSeq_data_LCG/ricardos_database/Supplementary_Data_1_Databases_Trees/e_AamoA.db_nr_aln_taxonomy_qiime.txt"
-mothur_tax="/Users/siljanen/Documents/AA_MiSeq_data_LCG/ricardos_database/Supplementary_Data_1_Databases_Trees/f_AamoA.db_nr_aln_taxonomy_mothur.txt"
-chimera_db="/Users/siljanen/Documents/AA_MiSeq_data_LCG/ricardos_database/Supplementary_Data_1_Databases_Trees/j_AamoA_chimera.ref.db_aln.trim.fasta"
-
-
-### 7) Discard all sequences that share less than 55% identity with any reference sequences
-
-
+### 3.1) Discard all sequences that share less than 55% identity with any reference sequences
+```
 usearch8 -usearch_global 2-uniques_nochim.fasta -db $db_seq -id 0.55 -strand plus \
 -uc 4a-uclust_report.txt -matched 4b-uniques_nochim_match.fasta -notmatched 4c-uniques_nochim_nomatch.fasta
+
+```
 # 78.8% matched (dada2, F=200bp R=200bp)
 # 49.3%  matched (dada2, F=200bp R=150bp)
 # 2.5% matched (dada2, F=150bp R=150bp)
 #  58.1% matched (dada2, F only 200bp)
 # With Taz =  55.7% matched (dada2, F only 200bp)
 
-### 8) UCHIME chimera filtration (using parameters defined by Alves et al., 2018)
+### 3.2) UCHIME chimera filtration (using parameters defined by [Alves et al., 2018](https://www.nature.com/articles/s41467-018-03861-1))
+
+For this step USEARCH v.8 must be used, because in the latter version, it is not possible anymore to specifiy the ```-mindiv``` and ```-minh``` parameters of ```-uchime_ref```.
 
 usearch8 -uchime_ref  4b-uniques_nochim_match.fasta -db $chimera_db \
 -nonchimeras 5a-uniques_nochim_match_uchimed.fasta -strand plus -mindiv 1.7 -minh 0.1 -uchimeout 5b-uchime_report.txt
