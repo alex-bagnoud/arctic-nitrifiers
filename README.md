@@ -27,6 +27,8 @@ bzip2 -d *.bz2
 ```
 #### 2) DADA2 pipeline
 
+This part is was written based on the [DADA2 tutorial](https://benjjneb.github.io/dada2/tutorial.html)
+
 ##### 2.1) Set-up the R environment
 * Load DADA2
 ```
@@ -43,42 +45,20 @@ list.files(path)
 ```
 
 ##### 2.2) Filtering and trimming
-
+* Extracting sample names
 ```
-# Extracting samples names
 fnFs <- sort(list.files(path, pattern="_R1.fastq", full.names = TRUE))
 fnRs <- sort(list.files(path, pattern="_R2.fastq", full.names = TRUE))
 
 sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
-
 sample.names
 ```
-
-## Set up the replicates list and replicates groups based on samples.names
-#Surface only New set of samples with Tazorvsky:
-replicates_list <- c("peat_2", "peat_5", "peat_8", "peat_17",  "peat_64", 
-                     "peat_65", "peat_66", "peat_63", "peat_67", "peat_69", "peat_71", "peat_77")
-
-replicates_list_NEW <- c("peat_002", "peat_005", "peat_008", "peat_017",  
-                         "peat_032", "peat_033",  "peat_030", "peat_031", 
-                         "peat_038", "peat_039", "peat_064", 
-                     "peat_065", "peat_066", "peat_063", "peat_067", "peat_069", "peat_071", "peat_077")
-
-
-#surface only:
-replicates_groups_NEW <- c("Kev_BS", "Kev_BS", "Kev_BS", "Kev_VS",
-                       "Taz_PP_BS", "Taz_PP_BS", "Taz_PP_VS", "Taz_PP_VS", "Taz_PB_BS", "Taz_PB_BS",
-                       "Sei_BS", "Sei_BS", "Sei_BS", "Sei_VS",
-                       "Tay_BS", "Tay_BS", "Tay_BS", 
-                       "Tay_VS")
-
-
-
-# Read quality vizualisation of some samples
+* Read quality vizualisation of some samples
+```
 plotQualityProfile(fnFs[1:12]) # Visualize the quality of other samples by modifying the numbers in bracket.
-
-
-# Read filtering and trimming
+```
+* Read filtering and trimming
+```
 filt_path <- file.path("1-filtered_reads")
 filtFs <- file.path(filt_path, paste0(sample.names, "_F_filt.fastq.gz"))
 
@@ -88,27 +68,26 @@ out <- filterAndTrim(fnFs, filtFs,  truncLen=c(200),
                      compress=TRUE, multithread=TRUE) # Modify accordingly
 
 out
+```
 
-## LEARN THE ERROR RATES
-
+##### 2.3) Learn the error rates
+```
 errF <- learnErrors(filtFs, multithread=TRUE)
-
-
 plotErrors(errF, nominalQ=TRUE)
+```
 
-## DEREPLICATION
-
+##### 2.4) Dereplication
+```
 derepFs <- derepFastq(filtFs, verbose=TRUE)
-
-
-# Name the derep-class objects by the sample names
+```
+* Name the derep-class objects by the sample names
+```
 names(derepFs) <- sample.names
-
-
-
-## SAMPLE INFERENCE
-
+```
+##### 2.5) Sample inferrence
+```
 dadaFs <- dada(derepFs, err=errF, multithread=TRUE)
+```
 
 ## CONSTRUCT SEQUENCE TABLE
 
