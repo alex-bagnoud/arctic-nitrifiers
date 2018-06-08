@@ -685,9 +685,6 @@ dev.off()
 
 
 
-## 12-top OTUS BARPLOTS for unaggregated data:
-
-
 
 ## NMDS for simplified asv list
 library(vegan)
