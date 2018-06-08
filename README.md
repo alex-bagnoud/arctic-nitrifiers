@@ -606,6 +606,67 @@ dev.off()
 ```
 ![](plots/asv_bubble_plot.svg)
 
+##### 5.2) Reference-OTUs bubble plots
+* For this plot we will aggregate level-5 taxonomic annotation so we will end up with 3 categories only
+```r
+l5.tax <- aggregate(asv.tax[,2:19], by=list(annotation=asv.tax$l5_tax), FUN=sum)
+```
+* Transpose the dataframe
+```r
+n <- l5.tax$annotation
+l5.tax.t <- as.data.frame(t(l5.tax[,-1]))
+colnames(l5.tax.t) <- n
+l5.tax.t$replicate <- rownames(l5.tax.t)
+rownames(l5.tax.t) <- NULL
+```
+* Add the replicates groups to this dataframe
+```r
+l5.tax.t$sample <- rep(NA, nrow(l5.tax.t))
+for (row in 1:nrow(l5.tax.t)) {
+    l5.tax.t$sample[row] <- replicates_groups[grep(l11.tax.t$replicate[row], replicates_list)]
+}
+```
+* Compute the mean and for each sample
+```r
+l5.tax.t.mean <- aggregate(l5.tax.t[,1:(ncol(l5.tax.t)-2)],
+                                         by=list(sample=l5.tax.t$sample),
+                                         FUN=mean)
+```
+* Melt the dataframe and parse it
+```r
+# Melt the dataframe
+molten3 <- melt(l5.tax.t.mean, id.vars = "sample")
+
+# Remove null values
+molten4 <- molten3[molten3$value > 0,]
+
+# Create a categorical variable to colour the bubble
+
+
+# Re-order the factor variables of the ASV labels
+molten4$variable <- factor(molten4$variable, levels = rev(levels(molten4$variable)))
+```
+* Compute the bubble_plot
+```r
+bubble_plot2 <- ggplot(molten4,aes(sample,variable)) +
+    geom_point(aes(size=value, fill=variable),shape=21,color="black") +
+    theme(panel.grid.major=element_line(linetype=1,color="grey"),
+          axis.text.x=element_text(angle=90,hjust=1,vjust=0),
+          panel.background = element_blank()) +
+    ylab("AOA ASVs") +
+    xlab("Samples") +
+    scale_fill_brewer(palette="Paired", name="AOA Taxonomic\nclade") +
+    #scale_fill_discrete(name="Taxonomic\nclade") +
+    #scale_fill_manual(values= c("maroon2", "pink", "#000000"), name="Taxonomic\nclade") +
+    scale_size(name = "Relative\nabundance")
+
+bubble_plot2
+
+svg("plots/l5_bubble_plot.svg", width = 7, height = 3)
+bubble_plot2
+dev.off()
+```
+![](plots/l5_bubble_plot.svg)
 
                            
 
