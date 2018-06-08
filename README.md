@@ -261,8 +261,9 @@ head(asv3[,2:(ncol(asv3)-1)])
 asv_counts <- colSums(asv3[,2:(ncol(asv3)-1)])
 asv3.rel <- asv3
 asv3.rel[,2:(ncol(asv3)-1)] <- sweep(asv3[,2:(ncol(asv3)-1)], 2, asv_counts, `/`)
-
-# Check to result
+```
+* Check the result (all columns shoud sum to 1)
+```
 colSums(asv3.rel[,2:(ncol(asv3)-1)])
 ## peat02 peat05 peat08 peat17 peat30 peat31 peat32 peat33 peat38 peat39 peat63 peat64 peat65 peat66 peat67 peat69 peat71 peat77 
 ##      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1 
@@ -313,7 +314,7 @@ if (length(col_to_remove) != 0) {
 ```
 * Set the column names
 ```
-names(tax3)[1] <- "OTU"
+names(tax3)[1] <- "ASV"
 names(tax3)[-1] <- paste0("l", 1:(ncol(tax3)-1), "_tax")
 ```
 * Set taxonomic annotations as character variables
@@ -336,10 +337,58 @@ for (col in 1:ncol(tax3)) {
     }
 }
 ```
-##### 4.2) Merge the ASV and the annotations tables
+##### 4.2) Aggregate the ASV table by taxonomic annotations
+* Merge the ASV and the annotations tables
 ```
+asv.tax <- merge(asv3.rel, tax3, by.x = "header", by.y = "ASV")
+```
+* Check the dimension of the merged table
+```
+dim(asv.tax)
+## [1] 159  31
+```
+* Aggregate by the full AOA annotation
+```
+asv.tax.l11 <- aggregate(asv.tax[,2:19], by=list(annotation=asv.tax$l11_tax), FUN=sum)
+
+asv.tax.l11[1:5,1:10]
+##                      annotation peat02     peat05       peat08     peat17     peat30 peat31       peat32    peat33       peat38
+## 1 NS-Alpha-3.2.1.1.1.1.1.1_OTU3      0 0.00276149 3.162387e-02 0.23537061 0.00000000      0 0.0005790318 0.0990566 0.1862507508
+## 2             NS-Delta-2.1_OTU2      0 0.00000000 0.000000e+00 0.01950585 0.00000000      0 0.0000000000 0.0000000 0.0000000000
+## 3        NS-Gamma-2.3.2.2_OTU12      0 0.00000000 0.000000e+00 0.00000000 0.00000000      0 0.0030640433 0.0000000 0.0000000000
+## 4         NS-Gamma-2.3.2.2_OTU7      0 0.00000000 0.000000e+00 0.00000000 0.00000000      0 0.0084442139 0.0000000 0.0000000000
+## 5   NS-Gamma-2.3.2.2_unassigned      0 0.00000000 9.328576e-05 0.02470741 0.01618123      0 0.9123008070 0.7924528 0.0002485553
+
+write.table(asv.tax.l11, "8a-l11_table_rel.txt", quote = FALSE, sep = "\t", row.names = FALSE)
+```
+* Aggregate by the AOA clade annotation (level 2)
+```
+asv.tax.l2 <- aggregate(asv.tax[,2:19], by=list(annotation=asv.tax$l2_tax), FUN=sum)
+
+asv.tax.l2[,1:10]
+##   annotation peat02     peat05       peat08     peat17    peat30 peat31       peat32     peat33     peat38
+## 1   NS-Alpha      0 0.00276149 3.162387e-02 0.23537061 0.0000000      0 0.0005790318 0.09905660 0.18625075
+## 2   NS-Delta      0 0.00000000 0.000000e+00 0.01950585 0.0000000      0 0.0000000000 0.00000000 0.00000000
+## 3   NS-Gamma      0 0.00000000 9.328576e-05 0.04551365 0.6359223      1 0.9626403851 0.86320755 0.00035212
+## 4    NS-Zeta      1 0.99723851 9.682828e-01 0.69960988 0.3640777      0 0.0367805831 0.03773585 0.81339713
+
+write.table(asv.tax.l2, "8b-l2_table_rel.txt", quote = FALSE, sep = "\t", row.names = FALSE)
+```
+##### 4.3) Aggregate the ASV table by taxonomic annotations
 
 
+# Aggregate all identical phylogenetic annotations (full annotations)
+afa_aggr <- aggregate(afa_abs[,6:ncol(afa_abs)], by=list(annotation=afa_abs$annotation), FUN=sum)
+afa_aggr_rel <- aggregate(afa_rel[,6:ncol(afa_rel)], by=list(annotation=afa_rel$annotation), FUN=sum)
+
+dim(afa_aggr_rel)
+# 7  13
+# With Taz:  8 19
+
+
+# Aggregate all identical phylogenetic annotations (level-2 annotations)
+afa_aggr_l2 <- aggregate(afa_abs[,6:ncol(afa_abs)], by=list(annotation=afa_abs$annotation_l2), FUN=sum)
+afa_aggr_l2_rel <- aggregate(afa_rel[,6:ncol(afa_rel)], by=list(annotation=afa_rel$annotation_l2), FUN=sum)
 
 # Import annotation file
 annot <- read.table("/Users/siljanen/Documents/AA_MiSeq_data_LCG/LGC_G20002861_part1/PrimerClipped/Henri_AOA_amoA/Peat_soil_DNA/Raw_R1R2/2-dada2/
