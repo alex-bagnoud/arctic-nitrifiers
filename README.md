@@ -508,7 +508,7 @@ svg("plots/aoa_clade_abs_abundnance.svg", width = 5, height = 5)
 bp
 dev.off()
 ```
-![] (plots/aoa_clade_abs_abundnance.svg)
+![](plots/aoa_clade_abs_abundnance.svg)
 
 #### 5) Bubble plots
 
