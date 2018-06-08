@@ -9,12 +9,12 @@ These data were published here:
 
 #### Main steps
 
-##### [1) Preparing the data](#1-preparing-the-data)
-##### [2) DADA2 pipeline](#2-dada2-pipeline-in-r)
-##### [3) Further chimera filtration and annotations of ASVs sequences](#3-further-chimera-filtrat-and-annotation-of-asvs-sequences-in-the-terminal)
-##### [4) What are the abundances of the different AOA clades?](#4-what-are-the-abundances-of-the-different-aoa-clades-in-r)
-##### [5) Bubble plots](#5-bubble-plots)
-##### [6) NMDS analysis](#6-nmds-analysis)
+##### [Step1: Preparing the data](#1-preparing-the-data)
+##### [Step2: DADA2 pipeline](#2-dada2-pipeline-in-r)
+##### [Step3: Further chimera filtration and annotations of ASVs sequences](#3-further-chimera-filtrat-and-annotation-of-asvs-sequences-in-the-terminal)
+##### [Step4: What are the abundances of the different AOA clades?](#4-what-are-the-abundances-of-the-different-aoa-clades-in-r)
+##### [Step5: Bubble plots](#5-bubble-plots)
+##### [Step6: NMDS analysis](#6-nmds-analysis)
 
 
 #### Software used:
