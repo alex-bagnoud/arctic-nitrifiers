@@ -498,10 +498,10 @@ mean(as.numeric(asv.tax.sorted.top50[51,-1]))
 * Transpose the ```asv.tax.sorted.top50``` dataframe
 ```
 n <- asv.tax.sorted.top50$annotation
-l2.tax.t <- as.data.frame(t(l2.tax[,-1]))
-colnames(l2.tax.t) <- n
-l2.tax.t$replicate <- rownames(l2.tax.t)
-rownames(l2.tax.t) <- NULL
+asv.tax.sorted.top50.t <- as.data.frame(t(asv.tax.sorted.top50[,-1]))
+colnames(asv.tax.sorted.top50.t) <- n
+asv.tax.sorted.top50.t$replicate <- rownames(asv.tax.sorted.top50.t)
+rownames(asv.tax.sorted.top50.t) <- NULL
 ```
 * Add the replicates groups to this dataframe
 ```
