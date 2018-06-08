@@ -22,7 +22,7 @@ These data were published here:
 * Rename them if needed.
 * Convert the fastq files into fastq (on the terminal):
 
-```
+```bash
 bzip2 -d 0/raw_data*.bz2
 ```
 #### 2) DADA2 pipeline (in R)
@@ -31,11 +31,11 @@ This part is was written based on the [DADA2 tutorial](https://benjjneb.github.i
 
 ##### 2.1) Set-up the R environment
 * Load DADA2
-```
+```r
 library("dada2")
 ```
 * Define the path variable for the fastq files
-```
+```r
 path <- "0-raw_data/"list.files(path)
 ##  [1] "peat02_R1.fastq" "peat02_R2.fastq" "peat05_R1.fastq" "peat05_R2.fastq" "peat08_R1.fastq" "peat08_R2.fastq" "peat17_R1.fastq"
 ##  [8] "peat17_R2.fastq" "peat30_R1.fastq" "peat30_R2.fastq" "peat31_R1.fastq" "peat31_R2.fastq" "peat32_R1.fastq" "peat32_R2.fastq"
@@ -47,7 +47,7 @@ path <- "0-raw_data/"list.files(path)
 
 ##### 2.2) Filtering and trimming
 * Extracting sample names
-```
+```r
 fnFs <- sort(list.files(path, pattern="_R1.fastq", full.names = TRUE))
 
 sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
@@ -56,12 +56,12 @@ sample.names
 ## [16] "peat69" "peat71" "peat77"
 ```
 * Read quality vizualisation of the R1 samples
-```
+```r
 plotQualityProfile(fnFs[1:18])
 ```
 ![](plots/quality_plots.png)
 * Read filtering and trimming
-```
+```r
 filt_path <- file.path("1-filtered_reads")
 filtFs <- file.path(filt_path, paste0(sample.names, "_F_filt.fastq.gz"))
 
@@ -92,40 +92,40 @@ out
 ```
 
 ##### 2.3) Learn the error rates
-```
+```r
 errF <- learnErrors(filtFs, multithread=TRUE)
 plotErrors(errF, nominalQ=TRUE)
 ```
 ![](plots/error_plots.png)
 
 ##### 2.4) Dereplication
-```
+```r
 derepFs <- derepFastq(filtFs, verbose=TRUE)
 ```
 * Name the derep-class objects by the sample names
-```
+```r
 names(derepFs) <- sample.names
 ```
 ##### 2.5) Sample inferrence
-```
+```r
 dadaFs <- dada(derepFs, err=errF, multithread=TRUE)
 ```
 
 ##### 2.6) Construct sequence table
-```
+```r
 seqtab <- makeSequenceTable(dadaFs, derepFs)
 dim(seqtab)
 ## [1]  18 319
 ```
 * Inspect distribution of sequence lengths
-```
+```r
 table(nchar(getSequences(seqtab)))
 ## 200 
 ## 319
 ```
 
 ##### 2.6) *denovo* chimera removal
-```
+```r
 seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
 ## Identified 65 bimeras out of 319 input sequences.
 
@@ -136,7 +136,7 @@ sum(seqtab.nochim)/sum(seqtab) # What is the fraction of reads that were not dis
 ## [1] 0.9871345
 ```
 ##### 2.7) Track the reads through the DADA2 pipeline
-```
+```r
 getN <- function(x) sum(getUniques(x))
 track <- cbind(out, sapply(dadaFs, getN), rowSums(seqtab), rowSums(seqtab.nochim))
 
@@ -168,18 +168,18 @@ write.table(track, "1-track.txt", quote = FALSE, sep = "\t", col.names = NA)
 
 ##### 2.8) Export data
 * fasta of uniques non-chimeric reads
-```
+```r
 uniquesToFasta(getUniques(seqtab.nochim), "2-uniques_nochim.fasta")
 ```
 * ASV table
-```
+```r
 write.table(t(seqtab.nochim), "3-asv_table.txt", sep="\t", row.names=TRUE, col.names=NA, quote=FALSE)
 ```
 
 #### 3) Further chimera filtration and annotations of ASVs sequences (in the terminal)
 
 * Set-up path to databases files
-```
+```bash
 db_seq="databases/d_AamoA.db_nr_aln.fasta"
 qiime_tax="databases/e_AamoA.db_nr_aln_taxonomy_qiime.txt"
 mothur_tax="databases/f_AamoA.db_nr_aln_taxonomy_mothur.txt"
@@ -187,7 +187,7 @@ chimera_db="databases/j_AamoA_chimera.ref.db_aln.trim.fasta"
 ```
 
 ##### 3.1) Discard all sequences that share less than 55% identity with any reference sequences
-```
+```bash
 usearch8 -usearch_global 2-uniques_nochim.fasta -db $db_seq -id 0.55 -strand plus \
 -uc 4a-uclust_report.txt -matched 4b-uniques_nochim_match.fasta -notmatched 4c-uniques_nochim_nomatch.fasta
 ## 100.0% Searching, 63.4% matched
@@ -196,7 +196,7 @@ usearch8 -usearch_global 2-uniques_nochim.fasta -db $db_seq -id 0.55 -strand plu
 ##### 3.2) UCHIME chimera filtration (using parameters defined by [Alves et al., 2018](https://www.nature.com/articles/s41467-018-03861-1))
 
 For this step, USEARCH v.8 must be used. The latter versions use UCHIME2 instead of UCHIME, for which it is not possible anymore to specifiy the ```-mindiv``` and ```-minh```.
-```
+```bash
 usearch8 -uchime_ref  4b-uniques_nochim_match.fasta -db $chimera_db \
 -nonchimeras 5a-uniques_nochim_match_uchimed.fasta -strand plus -mindiv 1.7 -minh 0.1 -uchimeout 5b-uchime_report.txt
 ## 100.0% Found 2/161 chimeras (1.2%), 59 not classified (36.6%)
@@ -204,43 +204,43 @@ usearch8 -uchime_ref  4b-uniques_nochim_match.fasta -db $chimera_db \
 
 ##### 3.3) Annotation of the OTUs (with UCLUST implemented in QIIME1)
 
-```
+```bash
 source activate qiime1
 assign_taxonomy.py -i 5a-uniques_nochim_match_uchimed.fasta -t $qiime_tax -r $db_seq --similarity 0.8 \
 -o 6-uniques_nochim_match_uchimed_uclust_annotation/
 source deactivate qiime1
 ```
 * What is the number of unique annotations?
-```
+```bash
 less 6-uniques_nochim_match_uchimed_uclust_annotation/5a-uniques_nochim_match_uchimed_tax_assignments.txt | cut -f2 | sort -u | wc -l
 ## 9
 ```
 
 * How many unassigned ASVs there is?
-```
+```bash
 grep -c Unassigned 6-uniques_nochim_match_uchimed_uclust_annotation/5a-uniques_nochim_match_uchimed_tax_assignments.txt
 ## 0
 ```
 ##### 3.4) Removing ASVs annotated as 'NS-Alpha-3.2.1.1.1.1.1.1_OTU'
 This reference OTU correspond the Nitrospheara viennensis, which was used as a positive control for PCRs prior to sequencing. So they likely represent cross-contaminations.
 * List of clean ASVs
-```
+```bash
 grep -v NS-Alpha-3.2.1.1.1.1.1.1_OTU3 \
 6-uniques_nochim_match_uchimed_uclust_annotation/5a-uniques_nochim_match_uchimed_tax_assignments.txt |\
 cut -f1 > 7a-clean_asv_list.txt
 ```
 * Make the ASV fasta file flat (to ease the ASV selection in the next step)
-```
+```bash
 scripts/fastaflatter_v14-03.2017.sh 5a-uniques_nochim_match_uchimed.fasta > 5c-uniques_nochim_match_uchimed_flat.fasta
 ```
 * Subsetting clean ASVs in the fasta file
-```
+```bash
 grep -A1 -f 7a-clean_asv_list.txt 5c-uniques_nochim_match_uchimed_flat.fasta | grep -v "^--" > 7b-clean_asv.fasta
 ```
 
 ##### 3.4) Subetting the ASV table (in R) (excluding non-*amoA* sequences and chimeras detected by the reference-based method)
 * Importation of the ASV table
-```
+```r
 asv1 <- read.table("3-asv_table.txt")
 asv1$sequence <- rownames(asv1)
 rownames(asv1) <- NULL
@@ -250,7 +250,7 @@ nrow(asv1)
 ## [1] 254
 ```
 * Importation of the selected sequences as a dataframe
-```
+```r
 library("Biostrings")
 
 fastaToDf <- function(fastaFile){
@@ -261,7 +261,7 @@ fastaToDf <- function(fastaFile){
 fasta <- fastaToDf("7b-clean_asv.fasta")
 ```
 * Merge both dataframes by ```seq``` in a new one and save it as a new ASV table
-```
+```r
 asv2 <- merge(fasta, asv1)
 asv3 <- asv2[,c(2:ncol(asv2),1)] # to re-order the dataframe columns
 
@@ -272,20 +272,20 @@ nrow(asv3)
 write.table(asv3, "8a-asv_table2_abs.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 ```
 ##### 3.5) Compute relative abundances of ASVs
-```
+```r
 asv_counts <- sum(asv3[,2:(ncol(asv3)-1)])
 asv_counts <- colSums(asv3[,2:(ncol(asv3)-1)])
 asv3.rel <- asv3
 asv3.rel[,2:(ncol(asv3)-1)] <- sweep(asv3[,2:(ncol(asv3)-1)], 2, asv_counts, `/`)
 ```
 * Check the result (all columns shoud sum to 1)
-```
+```r
 colSums(asv3.rel[,2:(ncol(asv3)-1)])
 ## peat02 peat05 peat08 peat17 peat30 peat31 peat32 peat33 peat38 peat39 peat63 peat64 peat65 peat66 peat67 peat69 peat71 peat77 
 ##      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1 
 ```
 * Export the file
-```
+```r
 write.table(asv3.rel, "8b-asv_table2_rel.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 ```
 
@@ -293,25 +293,25 @@ write.table(asv3.rel, "8b-asv_table2_rel.txt", quote = FALSE, sep = "\t", row.na
 
 ##### 4.1) Importation and parsing of the annotation table in R
 * First, we import the annotation table in R
-```
+```r
 tax <- read.table("6-uniques_nochim_match_uchimed_uclust_annotation/5a-uniques_nochim_match_uchimed_tax_assignments.txt",
                   header = FALSE, sep = "\t")
 tax$V3 <- NULL
 tax$V4 <- NULL
 ```
 * Split the taxonomic annotation for each level
-```
+```r
 library("stringr")
 tax <- cbind(tax, str_split_fixed(tax$V2, ";", 11))
 tax$V2 <- NULL
 ```
 * Replace empty cells by ```NA```
-```
+```r
 tax2 <- as.data.frame(apply(tax, 2, function(x) gsub("^$|^ $", NA, x)))
 ```
 
 * Remove columns containing only 'NA'
-```
+```r
 col_to_remove <- c()
 
 for (col in 1:ncol(tax2)) {
@@ -328,18 +328,18 @@ if (length(col_to_remove) != 0) {
 }
 ```
 * Set the column names
-```
+```r
 names(tax3)[1] <- "ASV"
 names(tax3)[-1] <- paste0("l", 1:(ncol(tax3)-1), "_tax")
 ```
 * Set taxonomic annotations as character variables
-```
+```r
 for (col in 2:ncol(tax3)) {
     tax3[,col] <- as.character(tax3[,col])
 }
 ```
 * Fill all NAs (by copying the previous taxonomic annotation of each ASV
-```
+```r
 for (col in 1:ncol(tax3)) {
     for (row in 1:nrow(tax3)) {
         if (is.na(tax3[row,col])) {
@@ -354,20 +354,20 @@ for (col in 1:ncol(tax3)) {
 ```
 ##### 4.2) Aggregate the ASV table by taxonomic annotations
 * Merge the ASV and the annotations tables
-```
+```r
 asv.tax <- merge(asv3.rel, tax3, by.x = "header", by.y = "ASV")
 ```
 * Check the dimension of the merged table
-```
+```r
 dim(asv.tax)
 ## [1] 154  31
 ```
 * Export the table
-```
+```r
 write.table(asv.tax, "8c-asv_table2_rel_tax.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 ```
 * Aggregate by the full AOA annotation
-```
+```r
 l11.tax <- aggregate(asv.tax[,2:19], by=list(annotation=asv.tax$l11_tax), FUN=sum)
 
 l11.tax[1:5,1:10]
@@ -381,7 +381,7 @@ l11.tax[1:5,1:10]
 write.table(l11.tax, "9a-l11_table_rel.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 ```
 * Aggregate by the AOA clade annotation (level 2)
-```
+```r
 l2.tax <- aggregate(asv.tax[,2:19], by=list(annotation=asv.tax$l2_tax), FUN=sum)
 
 l2.tax[,1:10]
@@ -394,7 +394,7 @@ write.table(l2.tax, "9b-l2_table_rel.txt", quote = FALSE, sep = "\t", row.names 
 ```
 ##### 4.3) Aggregate the ASV table by taxonomic annotations
 * First define for each replicate which sample it belongs to.
-```
+```r
 replicates_list <- c("peat02", "peat05", "peat08", "peat17", "peat30",
                      "peat31", "peat32", "peat33", "peat38", "peat39",
                      "peat64", "peat65", "peat66", "peat63", "peat67",
@@ -406,7 +406,7 @@ replicates_groups <- c("Kev_BS", "Kev_BS", "Kev_BS", "Kev_VS", "Taz_PP_VS",
                        "Tay_BS", "Tay_BS", "Tay_VS")
 ```
 * Transpose the ```asv.tax``` dataframe
-```
+```r
 n <- l2.tax$annotation
 l2.tax.t <- as.data.frame(t(l2.tax[,-1]))
 colnames(l2.tax.t) <- n
@@ -414,14 +414,14 @@ l2.tax.t$replicate <- rownames(l2.tax.t)
 rownames(l2.tax.t) <- NULL
 ```
 * Add the replicates groups to this dataframe
-```
+```r
 l2.tax.t$sample <- rep(NA, nrow(l2.tax.t))
 for (row in 1:nrow(l2.tax.t)) {
     l2.tax.t$sample[row] <- replicates_groups[grep(l2.tax.t$replicate[row], replicates_list)]
 }
 ```
 * Compute the mean and sd for each sample
-```
+```r
 l2.tax.t.mean <- aggregate(l2.tax.t[,1:(ncol(l2.tax.t)-2)], by=list(sample=l2.tax.t$sample), FUN=mean)
 
 l2.tax.t.mean
@@ -451,7 +451,7 @@ l2.tax.t.sd
 ## 9 Taz_PP_VS        0 2.574418e-01 2.574418e-01
 ```
 * Save the files
-```
+```r
 write.table(l2.tax.t.mean, "10a-l2_table_rel_mean.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 write.table(l2.tax.t.sd, "10b-l2_table_rel_sd.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 ```
@@ -463,7 +463,7 @@ write.table(l2.tax.t.sd, "10b-l2_table_rel_sd.txt", quote = FALSE, sep = "\t", r
 
 ##### 5.1) Top-50 ASVs bubble plot
 * Parse the label for the bubble plot
-```
+```r
 asv_num <- sub(";size=[0-9]*;", "", asv.tax$header)
 asv_size <- sub(";", "", sub("sq[0-9]*;", "", asv.tax$header))
 asv_tax <- sub("_unassigned", "", asv.tax$l11_tax)
@@ -475,7 +475,7 @@ asv.tax$label[1:9]
 ## [7] "NS-Gamma-2.3.2_OTU5 sq116 (size=133)" "NS-Zeta-1.2_OTU7 sq117 (size=106)"    "NS-Zeta-1.2_OTU7 sq118 (size=42)" 
 ```
 * Keep only the 50-top ASVs
-```
+```r
 asv.tax$average <- rowMeans(asv.tax[,2:19])
 asv.tax.sorted <- asv.tax[order(-asv.tax$average),]
 
@@ -496,7 +496,7 @@ mean(as.numeric(asv.tax.sorted.top50[51,-1]))
 ## [1] 0.01192122
 ```
 * Transpose the ```asv.tax.sorted.top50``` dataframe
-```
+```r
 n <- asv.tax.sorted.top50$annotation
 asv.tax.sorted.top50.t <- as.data.frame(t(asv.tax.sorted.top50[,-1]))
 colnames(asv.tax.sorted.top50.t) <- n
@@ -504,14 +504,14 @@ asv.tax.sorted.top50.t$replicate <- rownames(asv.tax.sorted.top50.t)
 rownames(asv.tax.sorted.top50.t) <- NULL
 ```
 * Add the replicates groups to this dataframe
-```
+```r
 l2.tax.t$sample <- rep(NA, nrow(l2.tax.t))
 for (row in 1:nrow(l2.tax.t)) {
     l2.tax.t$sample[row] <- replicates_groups[grep(l2.tax.t$replicate[row], replicates_list)]
 }
 ```
 * Compute the mean and sd for each sample
-```
+```r
 l2.tax.t.mean <- aggregate(l2.tax.t[,1:(ncol(l2.tax.t)-2)], by=list(sample=l2.tax.t$sample), FUN=mean)
 
 
