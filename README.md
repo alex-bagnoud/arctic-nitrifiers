@@ -221,6 +221,16 @@ less 6-uniques_nochim_match_uchimed_uclust_annotation/5a-uniques_nochim_match_uc
 grep -c Unassigned 6-uniques_nochim_match_uchimed_uclust_annotation/5a-uniques_nochim_match_uchimed_tax_assignments.txt
 ## 0
 ```
+##### 3.4) Removing ASVs annotated as 'NS-Alpha-3.2.1.1.1.1.1.1_OTU'
+This reference OTU correspond the Nitrospheara viennensis, which was used as a positive control for PCRs prior to sequencing. So they likely represent cross-contaminations.
+* List of clean ASVs
+```
+grep -v NS-Alpha-3.2.1.1.1.1.1.1_OTU3 \
+6-uniques_nochim_match_uchimed_uclust_annotation/5a-uniques_nochim_match_uchimed_tax_assignments.txt |\
+cut -f1 > 7-clean_asv_list.txt
+```
+* Make the ASV fasta file flat (to ease the ASV selection in the next step)
+```
 
 ##### 3.4) Subetting the ASV table (in R) (excluding non-*amoA* sequences and chimeras detected by the reference-based method)
 * Importation of the ASV table
@@ -375,7 +385,8 @@ asv.tax.l2[,1:10]
 write.table(asv.tax.l2, "8b-l2_table_rel.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 ```
 ##### 4.3) Aggregate the ASV table by taxonomic annotations
-
+* First we need to define for each replicate which sample it belongs to.
+```
 
 # Aggregate all identical phylogenetic annotations (full annotations)
 afa_aggr <- aggregate(afa_abs[,6:ncol(afa_abs)], by=list(annotation=afa_abs$annotation), FUN=sum)
