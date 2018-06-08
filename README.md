@@ -227,9 +227,15 @@ This reference OTU correspond the Nitrospheara viennensis, which was used as a p
 ```
 grep -v NS-Alpha-3.2.1.1.1.1.1.1_OTU3 \
 6-uniques_nochim_match_uchimed_uclust_annotation/5a-uniques_nochim_match_uchimed_tax_assignments.txt |\
-cut -f1 > 7-clean_asv_list.txt
+cut -f1 > 7a-clean_asv_list.txt
 ```
 * Make the ASV fasta file flat (to ease the ASV selection in the next step)
+```
+scripts/fastaflatter_v14-03.2017.sh 5a-uniques_nochim_match_uchimed.fasta > 5c-uniques_nochim_match_uchimed_flat.fasta
+```
+* Subsetting clean ASVs in the fasta file
+```
+grep -A1 -f 7a-clean_asv_list.txt 5c-uniques_nochim_match_uchimed_flat.fasta | grep -v "^--" > 7b-clean_asv.fasta
 ```
 
 ##### 3.4) Subetting the ASV table (in R) (excluding non-*amoA* sequences and chimeras detected by the reference-based method)
@@ -252,7 +258,7 @@ fastaToDf <- function(fastaFile){
     fasta_df <- data.frame(header = names(dnaSeq), sequence = paste(dnaSeq))
 }
 
-fasta <- fastaToDf("5a-uniques_nochim_match_uchimed.fasta")
+fasta <- fastaToDf("7b-clean_asv.fasta")
 ```
 * Merge both dataframes by ```seq``` in a new one and save it as a new ASV table
 ```
@@ -261,13 +267,13 @@ asv3 <- asv2[,c(2:ncol(asv2),1)] # to re-order the dataframe columns
 
 # How many squences do we have in this new ASV table?
 nrow(asv3)
-## [1] 159
+## [1] 154
 
-write.table(asv3, "7a-asv_table2_abs.txt", quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(asv3, "8a-asv_table2_abs.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 ```
 ##### 3.5) Compute relative abundances of ASVs
 ```
-head(asv3[,2:(ncol(asv3)-1)])
+asv_counts <- sum(asv3[,2:(ncol(asv3)-1)])
 asv_counts <- colSums(asv3[,2:(ncol(asv3)-1)])
 asv3.rel <- asv3
 asv3.rel[,2:(ncol(asv3)-1)] <- sweep(asv3[,2:(ncol(asv3)-1)], 2, asv_counts, `/`)
@@ -280,7 +286,7 @@ colSums(asv3.rel[,2:(ncol(asv3)-1)])
 ```
 * Export the file
 ```
-write.table(asv3.rel, "7b-asv_table2_rel.txt", quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(asv3.rel, "8b-asv_table2_rel.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 ```
 
 #### 4) What are the abundances of the different AOA clades? (in R)
@@ -290,7 +296,6 @@ write.table(asv3.rel, "7b-asv_table2_rel.txt", quote = FALSE, sep = "\t", row.na
 ```
 tax <- read.table("6-uniques_nochim_match_uchimed_uclust_annotation/5a-uniques_nochim_match_uchimed_tax_assignments.txt",
                   header = FALSE, sep = "\t")
-tax$V1 <- sub(";.*;", "", tax.df$V1)
 tax$V3 <- NULL
 tax$V4 <- NULL
 ```
@@ -355,34 +360,37 @@ asv.tax <- merge(asv3.rel, tax3, by.x = "header", by.y = "ASV")
 * Check the dimension of the merged table
 ```
 dim(asv.tax)
-## [1] 159  31
+## [1] 154  31
+```
+* Export the table
+```
+write.table(asv.tax, "8c-asv_table2_rel_tax.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 ```
 * Aggregate by the full AOA annotation
 ```
 asv.tax.l11 <- aggregate(asv.tax[,2:19], by=list(annotation=asv.tax$l11_tax), FUN=sum)
 
 asv.tax.l11[1:5,1:10]
-##                      annotation peat02     peat05       peat08     peat17     peat30 peat31       peat32    peat33       peat38
-## 1 NS-Alpha-3.2.1.1.1.1.1.1_OTU3      0 0.00276149 3.162387e-02 0.23537061 0.00000000      0 0.0005790318 0.0990566 0.1862507508
-## 2             NS-Delta-2.1_OTU2      0 0.00000000 0.000000e+00 0.01950585 0.00000000      0 0.0000000000 0.0000000 0.0000000000
-## 3        NS-Gamma-2.3.2.2_OTU12      0 0.00000000 0.000000e+00 0.00000000 0.00000000      0 0.0030640433 0.0000000 0.0000000000
-## 4         NS-Gamma-2.3.2.2_OTU7      0 0.00000000 0.000000e+00 0.00000000 0.00000000      0 0.0084442139 0.0000000 0.0000000000
-## 5   NS-Gamma-2.3.2.2_unassigned      0 0.00000000 9.328576e-05 0.02470741 0.01618123      0 0.9123008070 0.7924528 0.0002485553
+##                    annotation peat02 peat05       peat08     peat17     peat30 peat31      peat32    peat33       peat38
+## 1           NS-Delta-2.1_OTU2      0      0 0.000000e+00 0.02551020 0.00000000      0 0.000000000 0.0000000 0.0000000000
+## 2      NS-Gamma-2.3.2.2_OTU12      0      0 0.000000e+00 0.00000000 0.00000000      0 0.003065819 0.0000000 0.0000000000
+## 3       NS-Gamma-2.3.2.2_OTU7      0      0 0.000000e+00 0.00000000 0.00000000      0 0.008449106 0.0000000 0.0000000000
+## 4 NS-Gamma-2.3.2.2_unassigned      0      0 9.633215e-05 0.03231293 0.01618123      0 0.912829364 0.8795812 0.0003054445
+## 5         NS-Gamma-2.3.2_OTU2      0      0 0.000000e+00 0.00000000 0.00000000      0 0.023609217 0.0000000 0.0000000000
 
-write.table(asv.tax.l11, "8a-l11_table_rel.txt", quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(asv.tax.l11, "9a-l11_table_rel.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 ```
 * Aggregate by the AOA clade annotation (level 2)
 ```
 asv.tax.l2 <- aggregate(asv.tax[,2:19], by=list(annotation=asv.tax$l2_tax), FUN=sum)
 
 asv.tax.l2[,1:10]
-##   annotation peat02     peat05       peat08     peat17    peat30 peat31       peat32     peat33     peat38
-## 1   NS-Alpha      0 0.00276149 3.162387e-02 0.23537061 0.0000000      0 0.0005790318 0.09905660 0.18625075
-## 2   NS-Delta      0 0.00000000 0.000000e+00 0.01950585 0.0000000      0 0.0000000000 0.00000000 0.00000000
-## 3   NS-Gamma      0 0.00000000 9.328576e-05 0.04551365 0.6359223      1 0.9626403851 0.86320755 0.00035212
-## 4    NS-Zeta      1 0.99723851 9.682828e-01 0.69960988 0.3640777      0 0.0367805831 0.03773585 0.81339713
+##   annotation peat02 peat05       peat08     peat17    peat30 peat31     peat32     peat33       peat38
+## 1   NS-Delta      0      0 0.000000e+00 0.02551020 0.0000000      0 0.00000000 0.00000000 0.0000000000
+## 2   NS-Gamma      0      0 9.633215e-05 0.05952381 0.6359223      1 0.96319811 0.95811518 0.0004327131
+## 3    NS-Zeta      1      1 9.999037e-01 0.91496599 0.3640777      0 0.03680189 0.04188482 0.9995672869
 
-write.table(asv.tax.l2, "8b-l2_table_rel.txt", quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(asv.tax.l2, "9b-l2_table_rel.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 ```
 ##### 4.3) Aggregate the ASV table by taxonomic annotations
 * First we need to define for each replicate which sample it belongs to.
