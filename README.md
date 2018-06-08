@@ -489,7 +489,7 @@ asv.tax.sorted$selection[1:50] <- "retained"
 asv.tax.sorted$label[asv.tax.sorted$selection == "discarded"] <- "Other"
 asv.tax.sorted$average <- NULL
 asv.tax.sorted$selection <- NULL
-asv.tax.sorted.top50 <- aggregate(asv.tax.sorted[,2:19], by=list(taxonomy=asv.tax.sorted$label), FUN=sum)
+asv.tax.sorted.top50 <- aggregate(asv.tax.sorted[,2:19], by=list(label=asv.tax.sorted$label), FUN=sum)
 
 # Which fraction of the relative abundance won't be displayed in the buble plot?
 mean(as.numeric(asv.tax.sorted.top50[51,-1]))
@@ -497,7 +497,7 @@ mean(as.numeric(asv.tax.sorted.top50[51,-1]))
 ```
 * Transpose the ```asv.tax.sorted.top50``` dataframe
 ```r
-n <- asv.tax.sorted.top50$annotation
+n <- asv.tax.sorted.top50$label
 asv.tax.sorted.top50.t <- as.data.frame(t(asv.tax.sorted.top50[,-1]))
 colnames(asv.tax.sorted.top50.t) <- n
 asv.tax.sorted.top50.t$replicate <- rownames(asv.tax.sorted.top50.t)
@@ -505,14 +505,51 @@ rownames(asv.tax.sorted.top50.t) <- NULL
 ```
 * Add the replicates groups to this dataframe
 ```r
-l2.tax.t$sample <- rep(NA, nrow(l2.tax.t))
-for (row in 1:nrow(l2.tax.t)) {
-    l2.tax.t$sample[row] <- replicates_groups[grep(l2.tax.t$replicate[row], replicates_list)]
+asv.tax.sorted.top50.t$sample <- rep(NA, nrow(asv.tax.sorted.top50.t))
+for (row in 1:nrow(asv.tax.sorted.top50.t)) {
+    asv.tax.sorted.top50.t$sample[row] <- replicates_groups[grep(asv.tax.sorted.top50.t$replicate[row], replicates_list)]
 }
 ```
-* Compute the mean and sd for each sample
+* Compute the mean and for each sample
 ```r
-l2.tax.t.mean <- aggregate(l2.tax.t[,1:(ncol(l2.tax.t)-2)], by=list(sample=l2.tax.t$sample), FUN=mean)
+asv.tax.sorted.top50.t.mean <- aggregate(asv.tax.sorted.top50.t[,1:(ncol(asv.tax.sorted.top50.t)-2)],
+                                         by=list(sample=asv.tax.sorted.top50.t$sample),
+                                         FUN=mean)
+```
+* Melt the dataframe
+```r
+library("reshape2")
+molten <- melt(asv.tax.sorted.top50.t.mean, id.vars = "sample")
+
+molten2 <- molten[molten$value > 0,]
+
+molten2$category <- sub(" .+", "", molten2$variable)
+library("ggplot2")
+
+factor(molten2$variable, ordered = rev(molten2$variable))
+molten2$variable <- factor(molten2$variable, levels = rev(levels(molten2$variable)))
+```
+* Compute the bubble_plot
+```r
+bubble_plot <- ggplot(molten2,aes(sample,variable)) +
+    geom_point(aes(size=value, fill=molten2$category),shape=21,color="black") +
+    theme(panel.grid.major=element_line(linetype=1,color="grey"),
+          axis.text.x=element_text(angle=90,hjust=1,vjust=0),
+          panel.background = element_blank()) +
+    ylab("AOA ASVs") +
+    xlab("Samples") +
+    scale_fill_brewer(palette="Paired", name="AOA Taxonomic\nclade") +
+    #scale_fill_discrete(name="Taxonomic\nclade") +
+    #scale_fill_manual(values= c("maroon2", "pink", "#000000"), name="Taxonomic\nclade") +
+    scale_size(name = "Relative\nabundance")
+
+bubble_plot
+
+svg("plots/asv_bubble_plot.svg", width = 7, height = 8)
+bubble_plot
+dev.off()
+```
+![](plots/asv_bubble_plot.svg)
 
 
                            
