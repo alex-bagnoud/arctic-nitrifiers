@@ -423,13 +423,97 @@ for (row in 1:nrow(l2.tax.t)) {
 * Compute the mean and sd for each sample
 ```
 l2.tax.t.mean <- aggregate(l2.tax.t[,1:(ncol(l2.tax.t)-2)], by=list(sample=l2.tax.t$sample), FUN=mean)
+
+l2.tax.t.mean
+##      sample  NS-Delta     NS-Gamma    NS-Zeta
+## 1    Kev_BS 0.0000000 3.211072e-05 0.99996789
+## 2    Kev_VS 0.0255102 5.952381e-02 0.91496599
+## 3    Sei_BS 0.0000000 2.691368e-01 0.73086316
+## 4    Sei_VS 0.0000000 4.285714e-01 0.57142857
+## 5    Tay_BS 0.0000000 2.781729e-01 0.72182714
+## 6    Tay_VS 0.0000000 0.000000e+00 1.00000000
+## 7 Taz_PB_BS 0.0000000 1.372923e-01 0.86270774
+## 8 Taz_PP_BS 0.0000000 9.606566e-01 0.03934335
+## 9 Taz_PP_VS 0.0000000 8.179612e-01 0.18203883
+
 l2.tax.t.sd <- aggregate(l2.tax.t[,1:(ncol(l2.tax.t)-2)], by=list(sample=l2.tax.t$sample), FUN=sd)
+
+l2.tax.t.sd
+##      sample NS-Delta     NS-Gamma      NS-Zeta
+## 1    Kev_BS        0 5.561739e-05 5.561739e-05
+## 2    Kev_VS       NA           NA           NA
+## 3    Sei_BS        0 3.366899e-01 3.366899e-01
+## 4    Sei_VS       NA           NA           NA
+## 5    Tay_BS        0 4.816686e-01 4.816686e-01
+## 6    Tay_VS       NA           NA           NA
+## 7 Taz_PB_BS        0 1.935486e-01 1.935486e-01
+## 8 Taz_PP_BS        0 3.594170e-03 3.594170e-03
+## 9 Taz_PP_VS        0 2.574418e-01 2.574418e-01
 ```
 * Save the files
 ```
 write.table(l2.tax.t.mean, "10a-l2_table_rel_mean.txt", quote = FALSE, sep = "\t", row.names = FALSE)
-write.table(l2.tax.t.sd, "10b-l2_table_rel_sd.tx", quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(l2.tax.t.sd, "10b-l2_table_rel_sd.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 ```
+##### 4.4) Compute the absolute abundances of AOA clades
+
+*waiting on Henri's qPCR data*
+
+#### 5) Bubble plots
+
+##### 5.1) Top-50 ASVs bubble plot
+* Parse the label for the bubble plot
+```
+asv_num <- sub(";size=[0-9]*;", "", asv.tax$header)
+asv_size <- sub(";", "", sub("sq[0-9]*;", "", asv.tax$header))
+asv_tax <- sub("_unassigned", "", asv.tax$l11_tax)
+asv.tax$label <- paste0(asv_tax, " ", asv_num, " (", asv_size, ")")
+
+asv.tax$label[1:9]
+## [1] "NS-Zeta-1.2_OTU7 sq100 (size=36)"     "NS-Zeta-1.2_OTU7 sq101 (size=119)"    "NS-Zeta-1.2_OTU7 sq104 (size=3396)"  
+## [4] "NS-Zeta-1.2_OTU7 sq105 (size=2258)"   "NS-Zeta-1.2_OTU7 sq113 (size=300)"    "NS-Gamma-2.3.2_OTU5 sq115 (size=171)"
+## [7] "NS-Gamma-2.3.2_OTU5 sq116 (size=133)" "NS-Zeta-1.2_OTU7 sq117 (size=106)"    "NS-Zeta-1.2_OTU7 sq118 (size=42)" 
+```
+* Keep only the 50-top ASVs
+```
+asv.tax$average <- rowMeans(asv.tax[,2:19])
+asv.tax.sorted <- asv.tax[order(-asv.tax$average),]
+
+asv.tax.sorted$average[1:20]
+##  [1] 0.2592535079 0.2399200648 0.2107767861 0.1023254002 0.0857615133 0.0314381815 0.0104507160 0.0083603020 0.0054725480 0.0045901975
+## [11] 0.0045204779 0.0025405832 0.0019078103 0.0018029713 0.0017631422 0.0014172336 0.0013136944 0.0009468290 0.0008750952 0.000691199
+
+# Aggregate the smaller taxonomic bins together
+asv.tax.sorted$selection <- rep("discarded", nrow(asv.tax.sorted))
+asv.tax.sorted$selection[1:50] <- "retained"
+asv.tax.sorted$label[asv.tax.sorted$selection == "discarded"] <- "Other"
+asv.tax.sorted$average <- NULL
+asv.tax.sorted$selection <- NULL
+asv.tax.sorted.top50 <- aggregate(asv.tax.sorted[,2:19], by=list(taxonomy=asv.tax.sorted$label), FUN=sum)
+
+# Which fraction of the relative abundance won't be displayed in the buble plot?
+mean(as.numeric(asv.tax.sorted.top50[51,-1]))
+## [1] 0.01192122
+```
+* Transpose the ```asv.tax.sorted.top50``` dataframe
+```
+n <- asv.tax.sorted.top50$annotation
+l2.tax.t <- as.data.frame(t(l2.tax[,-1]))
+colnames(l2.tax.t) <- n
+l2.tax.t$replicate <- rownames(l2.tax.t)
+rownames(l2.tax.t) <- NULL
+```
+* Add the replicates groups to this dataframe
+```
+l2.tax.t$sample <- rep(NA, nrow(l2.tax.t))
+for (row in 1:nrow(l2.tax.t)) {
+    l2.tax.t$sample[row] <- replicates_groups[grep(l2.tax.t$replicate[row], replicates_list)]
+}
+```
+* Compute the mean and sd for each sample
+```
+l2.tax.t.mean <- aggregate(l2.tax.t[,1:(ncol(l2.tax.t)-2)], by=list(sample=l2.tax.t$sample), FUN=mean)
+
 
                            
 
