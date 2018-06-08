@@ -456,8 +456,59 @@ write.table(l2.tax.t.mean, "10a-l2_table_rel_mean.txt", quote = FALSE, sep = "\t
 write.table(l2.tax.t.sd, "10b-l2_table_rel_sd.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 ```
 ##### 4.4) Compute the absolute abundances of AOA clades
+* Import qPCR data
+```r
+qpcr <- read.table("0-raw_data/qpcr_data.txt", header = TRUE, sep = "\t")
+```
+* Calculate the average of qPCR abundances for each sample (from the replicates)
+```r
+qpcr.agg <- aggregate(qpcr$amoA, by=list(sample=qpcr$sample), FUN=mean)
+names(qpcr.agg)[2] <- "amoA"
+```
+* Multiply the relative abundance of each AOA clade with the qPCR absolute abundances
+```r
+qpcr.abs <- merge(l2.tax.t.mean, qpcr.agg)
+qpcr.abs$`NS-Delta` <- qpcr.abs$`NS-Delta`*qpcr.abs$amoA
+qpcr.abs$`NS-Gamma` <- qpcr.abs$`NS-Gamma`*qpcr.abs$amoA
+qpcr.abs$`NS-Zeta` <- qpcr.abs$`NS-Zeta`*qpcr.abs$amoA
 
-*waiting on Henri's qPCR data*
+# Check that the sum of relative abundance of all AOA clades
+# for each sample match its qPCR value
+rowSums(qpcr.abs[,2:4])/qpcr.abs[,5]
+## [1] 1 1 1 1 1 1 1 1 1
+
+qpcr.abs$amoA <- NULL
+```
+* Melt the dataframe 
+```r
+library("reshape2")
+qpcr.abs.m <- melt(qpcr.abs, id.vars = "sample")
+```
+* Compute the barplot
+```r
+library("ggplot2")
+
+bp <- ggplot(qpcr.abs.m, aes(x=sample, y=log10(value+1), fill=variable)) +
+    geom_bar(stat = "identity", position="dodge") +
+    theme_bw() +
+    coord_flip() +
+    theme(axis.line = element_line(colour = "black"),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.border = element_blank(),
+          panel.background = element_blank()) +
+    scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) +
+    scale_y_continuous(breaks=1:10) +
+    guides(fill=guide_legend(title="AOA clade")) +
+    ylab("log10(amoA cp-1 g-1 dw)")
+
+bp
+
+svg("plots/aoa_clade_abs_abundnance.svg", width = 5, height = 5)
+bp
+dev.off()
+```
+![] (plots/aoa_clade_abs_abundnance.svg)
 
 #### 5) Bubble plots
 
@@ -519,7 +570,6 @@ asv.tax.sorted.top50.t.mean <- aggregate(asv.tax.sorted.top50.t[,1:(ncol(asv.tax
 * Melt the dataframe and parse it
 ```r
 # Melt the dataframe
-library("reshape2")
 molten <- melt(asv.tax.sorted.top50.t.mean, id.vars = "sample")
 
 # Remove null values
