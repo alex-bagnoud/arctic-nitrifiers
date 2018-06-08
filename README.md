@@ -10,11 +10,17 @@ These data were published here:
 #### Main steps
 
 ##### [Step1: Preparing the data](#1-preparing-the-data)
+Here we simply put all fastq files in the same folder, rename them and decompress them.
 ##### [Step2: DADA2 pipeline](#2-dada2-pipeline-in-r)
+Here we ran DADA2 according to the official [tutorial](https://benjjneb.github.io/dada2/tutorial.html).
 ##### [Step3: Further chimera filtration and annotations of ASVs sequences](#3-further-chimera-filtration-and-annotations-of-asvs-sequences-in-the-terminal)
+Based on the archaeal *amoA* phylogeny of [Alves *et al*. (2018)](https://www.nature.com/articles/s41467-018-03861-1), we excluded additional chimeras with a reference-based method and we annotated ASVs.
 ##### [Step4: What are the abundances of the different AOA clades?](#4-what-are-the-abundances-of-the-different-aoa-clades-in-r)
+Here we calculated based on qPCR data the absolute abundances of AOA clades accross the different samples.
 ##### [Step5: Bubble plots](#5-bubble-plots)
+We produced bubble plots in R the illustrate the AOA communities structures.
 ##### [Step6: NMDS analysis](#6-nmds-analysis)
+Finally, we performed a NMDS analysis to understand how AOA communities were structured.
 
 
 #### Software used:
