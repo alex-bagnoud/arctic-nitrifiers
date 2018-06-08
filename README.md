@@ -222,6 +222,32 @@ grep -c Unassigned 6-uniques_nochim_match_uchimed_uclust_annotation/5a-uniques_n
 ## 0
 ```
 
+##### 3.4) Subetting the ASV table (in R) (excluding non-*amoA* sequences and chimeras detected by the reference-based method)
+* Importation of the ASV table
+```
+asv1 <- read.table("3-asv_table.txt")
+asv1$sequence <- rownames(asv1)
+rownames(asv1) <- NULL
+```
+* Importation of the selected sequences as a dataframe
+```
+library("Biostrings")
+
+fastaToDf <- function(fastaFile){
+    dnaSeq <- readBStringSet(fastaFile)
+    fasta_df <- data.frame(header = names(dnaSeq), sequence = paste(dnaSeq))
+}
+
+fasta <- fastaToDf("5a-uniques_nochim_match_uchimed.fasta")
+```
+* Merge both dataframes by ```seq``` in a new one and save it as a new ASV table
+```
+asv2 <- merge(fasta, asv1)
+asv3 <- asv2[,c(2:ncol(asv2),1)] # to re-order the dataframe columns
+
+write.table(asv3, "7-asv_table2.txt", quote = FALSE, sep = "\t", row.names = FALSE)
+```
+
 # Import annotation file
 annot <- read.table("/Users/siljanen/Documents/AA_MiSeq_data_LCG/LGC_G20002861_part1/PrimerClipped/Henri_AOA_amoA/Peat_soil_DNA/Raw_R1R2/2-dada2/
                     6-uniques_nochim_match_uchimed_uclust_annotation/5a-uniques_nochim_match_uchimed_tax_assignments_NVcleaned.txt",
