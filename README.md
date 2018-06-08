@@ -253,10 +253,26 @@ asv3 <- asv2[,c(2:ncol(asv2),1)] # to re-order the dataframe columns
 nrow(asv3)
 ## [1] 159
 
-write.table(asv3, "7-asv_table2.txt", quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(asv3, "7a-asv_table2_abs.txt", quote = FALSE, sep = "\t", row.names = FALSE)
+```
+##### 3.5) Compute relative abundances of ASVs
+```
+head(asv3[,2:(ncol(asv3)-1)])
+asv_counts <- colSums(asv3[,2:(ncol(asv3)-1)])
+asv3.rel <- asv3
+asv3.rel[,2:(ncol(asv3)-1)] <- sweep(asv3[,2:(ncol(asv3)-1)], 2, asv_counts, `/`)
+
+# Check to result
+colSums(asv3.rel[,2:(ncol(asv3)-1)])
+## peat02 peat05 peat08 peat17 peat30 peat31 peat32 peat33 peat38 peat39 peat63 peat64 peat65 peat66 peat67 peat69 peat71 peat77 
+##      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1 
+```
+* Export the file
+```
+write.table(asv3.rel, "7b-asv_table2_rel.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 ```
 
-#### 4) What are the relative abundances of the AOA clades? (in R)
+#### 4) What are the abundances of the different AOA clades? (in R)
 
 ##### 4.1) Importation and parsing of the annotation table in R
 * First, we import the annotation table in R
@@ -319,6 +335,8 @@ for (col in 1:ncol(tax3)) {
         }
     }
 }
+```
+##### 4.2) Merge the ASV and the annotations tables
 ```
 
 
