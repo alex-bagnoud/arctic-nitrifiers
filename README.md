@@ -368,9 +368,9 @@ write.table(asv.tax, "8c-asv_table2_rel_tax.txt", quote = FALSE, sep = "\t", row
 ```
 * Aggregate by the full AOA annotation
 ```
-asv.tax.l11 <- aggregate(asv.tax[,2:19], by=list(annotation=asv.tax$l11_tax), FUN=sum)
+l11.tax <- aggregate(asv.tax[,2:19], by=list(annotation=asv.tax$l11_tax), FUN=sum)
 
-asv.tax.l11[1:5,1:10]
+l11.tax[1:5,1:10]
 ##                    annotation peat02 peat05       peat08     peat17     peat30 peat31      peat32    peat33       peat38
 ## 1           NS-Delta-2.1_OTU2      0      0 0.000000e+00 0.02551020 0.00000000      0 0.000000000 0.0000000 0.0000000000
 ## 2      NS-Gamma-2.3.2.2_OTU12      0      0 0.000000e+00 0.00000000 0.00000000      0 0.003065819 0.0000000 0.0000000000
@@ -378,113 +378,72 @@ asv.tax.l11[1:5,1:10]
 ## 4 NS-Gamma-2.3.2.2_unassigned      0      0 9.633215e-05 0.03231293 0.01618123      0 0.912829364 0.8795812 0.0003054445
 ## 5         NS-Gamma-2.3.2_OTU2      0      0 0.000000e+00 0.00000000 0.00000000      0 0.023609217 0.0000000 0.0000000000
 
-write.table(asv.tax.l11, "9a-l11_table_rel.txt", quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(l11.tax, "9a-l11_table_rel.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 ```
 * Aggregate by the AOA clade annotation (level 2)
 ```
-asv.tax.l2 <- aggregate(asv.tax[,2:19], by=list(annotation=asv.tax$l2_tax), FUN=sum)
+l2.tax <- aggregate(asv.tax[,2:19], by=list(annotation=asv.tax$l2_tax), FUN=sum)
 
-asv.tax.l2[,1:10]
+l2.tax[,1:10]
 ##   annotation peat02 peat05       peat08     peat17    peat30 peat31     peat32     peat33       peat38
 ## 1   NS-Delta      0      0 0.000000e+00 0.02551020 0.0000000      0 0.00000000 0.00000000 0.0000000000
 ## 2   NS-Gamma      0      0 9.633215e-05 0.05952381 0.6359223      1 0.96319811 0.95811518 0.0004327131
 ## 3    NS-Zeta      1      1 9.999037e-01 0.91496599 0.3640777      0 0.03680189 0.04188482 0.9995672869
 
-write.table(asv.tax.l2, "9b-l2_table_rel.txt", quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(l2.tax, "9b-l2_table_rel.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 ```
 ##### 4.3) Aggregate the ASV table by taxonomic annotations
-* First we need to define for each replicate which sample it belongs to.
+* First define for each replicate which sample it belongs to.
+```
+replicates_list <- c("peat02", "peat05", "peat08", "peat17", "peat30",
+                     "peat31", "peat32", "peat33", "peat38", "peat39",
+                     "peat64", "peat65", "peat66", "peat63", "peat67",
+                      "peat69", "peat71", "peat77")
+
+replicates_groups <- c("Kev_BS", "Kev_BS", "Kev_BS", "Kev_VS", "Taz_PP_VS",
+                       "Taz_PP_VS", "Taz_PP_BS", "Taz_PP_BS", "Taz_PB_BS", "Taz_PB_BS",
+                       "Sei_BS", "Sei_BS", "Sei_BS", "Sei_VS", "Tay_BS",
+                       "Tay_BS", "Tay_BS", "Tay_VS")
+```
+* Transpose the ```asv.tax``` dataframe
+```
+n <- l2.tax$annotation
+l2.tax.t <- as.data.frame(t(l2.tax[,-1]))
+colnames(l2.tax.t) <- n
+l2.tax.t$replicate <- rownames(l2.tax.t)
+rownames(l2.tax.t) <- NULL
+```
+* Add the replicates groups to this dataframe
+```
+l2.tax.t$sample <- rep(NA, nrow(l2.tax.t))
+for (row in 1:nrow(l2.tax.t)) {
+    l2.tax.t$sample[row] <- replicates_groups[grep(l2.tax.t$replicate[row], replicates_list)]
+}
+```
+* Compute the mean and sd for each sample
+```
+l2.tax.t.mean <- aggregate(l2.tax.t[,1:(ncol(l2.tax.t)-2)], by=list(sample=l2.tax.t$sample), FUN=mean)
+l2.tax.t.sd <- aggregate(l2.tax.t[,1:(ncol(l2.tax.t)-2)], by=list(sample=l2.tax.t$sample), FUN=sd)
+```
+* Save the files
+```
+write.table(l2.tax.t.mean, "10a-l2_table_rel_mean.txt", quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(l2.tax.t.sd, "10b-l2_table_rel_sd.tx", quote = FALSE, sep = "\t", row.names = FALSE)
 ```
 
-# Aggregate all identical phylogenetic annotations (full annotations)
-afa_aggr <- aggregate(afa_abs[,6:ncol(afa_abs)], by=list(annotation=afa_abs$annotation), FUN=sum)
-afa_aggr_rel <- aggregate(afa_rel[,6:ncol(afa_rel)], by=list(annotation=afa_rel$annotation), FUN=sum)
-
-dim(afa_aggr_rel)
-# 7  13
-# With Taz:  8 19
+                           
 
 
-# Aggregate all identical phylogenetic annotations (level-2 annotations)
-afa_aggr_l2 <- aggregate(afa_abs[,6:ncol(afa_abs)], by=list(annotation=afa_abs$annotation_l2), FUN=sum)
-afa_aggr_l2_rel <- aggregate(afa_rel[,6:ncol(afa_rel)], by=list(annotation=afa_rel$annotation_l2), FUN=sum)
-
-# Import annotation file
-annot <- read.table("/Users/siljanen/Documents/AA_MiSeq_data_LCG/LGC_G20002861_part1/PrimerClipped/Henri_AOA_amoA/Peat_soil_DNA/Raw_R1R2/2-dada2/
-                    6-uniques_nochim_match_uchimed_uclust_annotation/5a-uniques_nochim_match_uchimed_tax_assignments_NVcleaned.txt",
-                    header = FALSE)
-annot$V4 <- NULL
-names(annot) <- c("asv", "annotation", "confidence")
-
-# Retain the clade annotation in 1 column
-library(stringr)
-annot_l2 <- str_split_fixed(annot$annotation, ";", 11)[,2]
-annot_l1 <- str_split_fixed(annot$annotation, ";", 11)[,1]
-annot_l2[annot_l2 == ""] <- annot_l1[annot_l2 == ""]
-
-annot$annotation_l2 <- annot_l2
-
-head(annot)
-# Import fasta file (uniques and chemira-free reads) (here we have dada2 produced non-chemric uniques which have been uchimed with usearch8)
-library("Biostrings")
-citation("Biostrings")
-
-fasta_file <- readDNAStringSet("/Users/siljanen/Documents/AA_MiSeq_data_LCG/LGC_G20002861_part1/PrimerClipped/Henri_AOA_amoA/Peat_soil_DNA/Raw_R1R2/2-dada2/9-clean_asvs_dada2.fasta")
-head(fasta_file)
-asv = names(fasta_file)
-seq = paste(fasta_file)
-fasta_df <- data.frame(asv, seq)
-
-head(fasta_file)
-head(asv)
-head(seq)
-head(fasta_df)
-
-# Import ASV table (dada2 generated asv-table)
-asv_tab <- read.table("/Users/siljanen/Documents/AA_MiSeq_data_LCG/LGC_G20002861_part1/PrimerClipped/Henri_AOA_amoA/Peat_soil_DNA/Raw_R1R2/2-dada2/3-asv_table.txt", header = T, row.names = NULL)
-names(asv_tab)[1] <- "seq"
-
-colnames(asv_tab)
-colnames(afa_aggr_rel)
-
-# Merge all three data frames
-af <- merge(fasta_df, annot)
-afa_abs <- merge(af, asv_tab)
-
-# Compute relative abundances of ASVs
-asv_counts <- colSums(afa_abs[,6:ncol(afa_abs)])
-afa_rel <- afa_abs
-afa_rel[,6:ncol(afa_abs)] <- sweep(afa_abs[,6:ncol(afa_abs)], 2, asv_counts, `/`)
-afa_rel[is.na(afa_rel)] <- 0
 
 
-# Aggregate all identical phylogenetic annotations (full annotations)
-afa_aggr <- aggregate(afa_abs[,6:ncol(afa_abs)], by=list(annotation=afa_abs$annotation), FUN=sum)
-afa_aggr_rel <- aggregate(afa_rel[,6:ncol(afa_rel)], by=list(annotation=afa_rel$annotation), FUN=sum)
-
-dim(afa_aggr_rel)
-# 7  13
-# With Taz:  8 19
 
 
-# Aggregate all identical phylogenetic annotations (level-2 annotations)
-afa_aggr_l2 <- aggregate(afa_abs[,6:ncol(afa_abs)], by=list(annotation=afa_abs$annotation_l2), FUN=sum)
-afa_aggr_l2_rel <- aggregate(afa_rel[,6:ncol(afa_rel)], by=list(annotation=afa_rel$annotation_l2), FUN=sum)
 
-head(afa_aggr_l2)
-head(afa_aggr_l2_rel)
 
-# export the annotation asv tables
-"""
-mkdir 3-annotation
-"""
 
-write.table(afa_abs, "2-dada2/3-annotation/2a-asv_tab_tax.txt", sep = "\t", quote = FALSE, row.names = FALSE)
-write.table(afa_rel, "2-dada2/3-annotation/2b-asv_tab_rel_tax.txt", sep = "\t", quote = FALSE, row.names = FALSE)
-write.table(afa_aggr, "2-dada2/3-annotation/3a-asv_tab_tax_merged.txt", sep="\t", quote = FALSE, row.names = FALSE)
-write.table(afa_aggr_rel, "2-dada2/3-annotation/3b-asv_tab_rel_tax_merged.txt", sep="\t", quote = FALSE, row.names = FALSE)
-write.table(afa_aggr_l2, "2-dada2/3-annotation/4a-asv_tab_tax_merged_l2.txt", sep="\t", quote = FALSE, row.names = FALSE)
-write.table(afa_aggr_l2_rel, "2-dada2/3-annotation/4b-asv_tab_rel_tax_merged_l2.txt", sep="\t", quote = FALSE, row.names = FALSE)
+
+
+
 
 
 
