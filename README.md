@@ -516,21 +516,26 @@ asv.tax.sorted.top50.t.mean <- aggregate(asv.tax.sorted.top50.t[,1:(ncol(asv.tax
                                          by=list(sample=asv.tax.sorted.top50.t$sample),
                                          FUN=mean)
 ```
-* Melt the dataframe
+* Melt the dataframe and parse it
 ```r
+# Melt the dataframe
 library("reshape2")
 molten <- melt(asv.tax.sorted.top50.t.mean, id.vars = "sample")
 
+# Remove null values
 molten2 <- molten[molten$value > 0,]
 
+# Create a categorical variable to colour the bubbles
 molten2$category <- sub(" .+", "", molten2$variable)
 library("ggplot2")
 
-factor(molten2$variable, ordered = rev(molten2$variable))
+# Re-order the factor variables of the ASV labels
 molten2$variable <- factor(molten2$variable, levels = rev(levels(molten2$variable)))
 ```
 * Compute the bubble_plot
 ```r
+library("ggplot2")
+
 bubble_plot <- ggplot(molten2,aes(sample,variable)) +
     geom_point(aes(size=value, fill=molten2$category),shape=21,color="black") +
     theme(panel.grid.major=element_line(linetype=1,color="grey"),
