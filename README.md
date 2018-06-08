@@ -228,6 +228,10 @@ grep -c Unassigned 6-uniques_nochim_match_uchimed_uclust_annotation/5a-uniques_n
 asv1 <- read.table("3-asv_table.txt")
 asv1$sequence <- rownames(asv1)
 rownames(asv1) <- NULL
+
+# How many squences do we have in this ASV table?
+nrow(asv1)
+## [1] 254
 ```
 * Importation of the selected sequences as a dataframe
 ```
@@ -245,8 +249,79 @@ fasta <- fastaToDf("5a-uniques_nochim_match_uchimed.fasta")
 asv2 <- merge(fasta, asv1)
 asv3 <- asv2[,c(2:ncol(asv2),1)] # to re-order the dataframe columns
 
+# How many squences do we have in this new ASV table?
+nrow(asv3)
+## [1] 159
+
 write.table(asv3, "7-asv_table2.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 ```
+
+#### 4) What are the relative abundances of the AOA clades? (in R)
+
+##### 4.1) Importation and parsing of the annotation table in R
+* First, we import the annotation table in R
+```
+tax <- read.table("6-uniques_nochim_match_uchimed_uclust_annotation/5a-uniques_nochim_match_uchimed_tax_assignments.txt",
+                  header = FALSE, sep = "\t")
+tax$V1 <- sub(";.*;", "", tax.df$V1)
+tax$V3 <- NULL
+tax$V4 <- NULL
+```
+* Split the taxonomic annotation for each level
+```
+library("stringr")
+tax <- cbind(tax, str_split_fixed(tax$V2, ";", 11))
+tax$V2 <- NULL
+```
+* Replace empty cells by ```NA```
+```
+tax2 <- as.data.frame(apply(tax, 2, function(x) gsub("^$|^ $", NA, x)))
+```
+
+* Remove columns containing only 'NA'
+```
+col_to_remove <- c()
+
+for (col in 1:ncol(tax2)) {
+    x <- sum(is.na(tax2[,col]))/nrow(tax2)
+    if (x == 1) {
+        col_to_remove <- c(col_to_remove, col)
+    }
+}
+
+if (length(col_to_remove) != 0) {
+    tax3 <- tax2[,-col_to_remove]
+} else {
+    tax3 <- tax2
+}
+```
+* Set the column names
+```
+names(tax3)[1] <- "OTU"
+names(tax3)[-1] <- paste0("l", 1:(ncol(tax3)-1), "_tax")
+```
+* Set taxonomic annotations as character variables
+```
+for (col in 2:ncol(tax3)) {
+    tax3[,col] <- as.character(tax3[,col])
+}
+```
+* Fill all NAs (by copying the previous taxonomic annotation of each ASV
+```
+for (col in 1:ncol(tax3)) {
+    for (row in 1:nrow(tax3)) {
+        if (is.na(tax3[row,col])) {
+            if (!grepl("OTU", tax3[row,col-1]) & !grepl("unassigned", tax3[row,col-1])) {
+                tax3[row,col] <- paste0(tax3[row,col-1], "_unassigned")
+            } else {
+                tax3[row,col] <- tax3[row,col-1]
+            }
+        }
+    }
+}
+```
+
+
 
 # Import annotation file
 annot <- read.table("/Users/siljanen/Documents/AA_MiSeq_data_LCG/LGC_G20002861_part1/PrimerClipped/Henri_AOA_amoA/Peat_soil_DNA/Raw_R1R2/2-dada2/
