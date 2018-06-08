@@ -670,7 +670,6 @@ dev.off()
 
 #### 6) NMDS analyses
 
-##### 6.1) NMDS analyses from ASVs
 * Transpose the ASV tax table
 ```r
 n <- asv.tax$header
@@ -708,16 +707,17 @@ asv.tax.t$veg_shp[asv.tax.t$vegetation == "VS"] <- 2
 * Permanova test: are samples significantly different from each other when grouped by site or by vegetatio ?
 ```r
 library("vegan")
-denovo.bray <- as.data.frame(as.matrix(vegdist(asv.tax.t[,1:(ncol(asv.tax.t)-6)], diag = TRUE, upper = TRUE)))
+asv.bray <- as.data.frame(as.matrix(vegdist(asv.tax.t[,1:(ncol(asv.tax.t)-6)], diag = TRUE, upper = TRUE)))
 
-adonis(denovo.bray ~ asv.tax.t$site, denovo.bray, permutations = 3000) # p = 0.01466 *
-adonis(denovo.bray ~ asv.tax.t$vegetation, denovo.bray, permutations = 3000) # p = 0.5938
-adonis(denovo.bray ~ asv.tax.t$vegetation, denovo.bray, permutations = 3000, strata = asv.tax.t$site) # p = 0.4858
+adonis(asv.bray ~ asv.tax.t$site, asv.bray, permutations = 3000) # p = 0.01466 *
+adonis(asv.bray ~ asv.tax.t$vegetation, asv.bray, permutations = 3000) # p = 0.5938
+adonis(asv.bray ~ asv.tax.t$vegetation, asv.bray, permutations = 3000, strata = asv.tax.t$site) # p = 0.4858
+
 ```
 * Run the NMDS
 ```r
-denovo.nmds <- metaMDS(asv.tax.t[,1:(ncol(asv.tax.t)-6)], k=2)
-denovo.nmds
+asv.nmds <- metaMDS(asv.tax.t[,1:(ncol(asv.tax.t)-6)], k=2)
+asv.nmds
 
 ## Call:
 ##     metaMDS(comm = asv.tax.t[, 1:(ncol(asv.tax.t) - 6)], k = 2) 
@@ -736,10 +736,10 @@ denovo.nmds
 ```
 * Stress plot
 ```r
-stressplot(denovo.nmds)
+stressplot(asv.nmds)
 
 svg("plots/asv_nmds_stressplot.svg", width = 4, height = 4)
-stressplot(denovo.nmds)
+stressplot(asv.nmds)
 dev.off()
 ```
 ![](plots/asv_nmds_stressplot.svg)
@@ -747,12 +747,12 @@ dev.off()
 * Plot the NMDS
 ```r
 svg("plots/asv_nmds.svg", width = 5, height = 5)
-ordiplot(denovo.nmds,type="n")
-points(denovo.nmds, display = 'sites', col = asv.tax.t$site_col, pch = asv.tax.t$veg_shp, cex = 1.5, lwd = 2)
+ordiplot(asv.nmds,type="n")
+points(asv.nmds, display = 'sites', col = asv.tax.t$site_col, pch = asv.tax.t$veg_shp, cex = 1.5, lwd = 2)
 groupz <- unique(asv.tax.t$site)
 colz <- unique(asv.tax.t$site_col)
 for(i in seq(groupz)) { 
-    ordiellipse(denovo.nmds, asv.tax.t$site, kind="se", conf=0.95, label=F, font=1, cex=0.5, col=colz[i], show.groups=groupz[i])
+    ordiellipse(asv.nmds, asv.tax.t$site, kind="se", conf=0.95, label=F, font=1, cex=0.5, col=colz[i], show.groups=groupz[i])
 }
 legend('topright',title = "Ecosystem:", col=colz, legend=unique(asv.tax.t$site), pch = 16, cex = 0.7, box.col = "white", title.adj = FALSE)
 legend('topleft', title = "Vegetation:", legend=unique(asv.tax.t$vegetation), pch = sort(unique(asv.tax.t$veg_shp)), cex = 0.7, box.col = "white", , title.adj = FALSE)
@@ -760,3 +760,6 @@ title("ASV NMDS")
 dev.off()
 ```
 ![](plots/asv_nmds.svg)
+
+
+
