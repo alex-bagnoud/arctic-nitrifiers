@@ -22,6 +22,9 @@ We produced bubble plots in R the illustrate the AOA communities structures.
 ##### [Step6: NMDS analysis](#6-nmds-analysis)
 Finally, we performed a NMDS analysis to understand how AOA communities were structured.
 
+#### Selected outputs
+* all the plots can be found [here](plots/)
+* all the other output files (except the filtered reads, too big) can be found [here](/outputs)
 
 #### Software used:
 * DADA2 v1.6.0 (https://benjjneb.github.io/dada2/index.html)
@@ -30,7 +33,7 @@ Finally, we performed a NMDS analysis to understand how AOA communities were str
 * USEARCH v.8 (https://www.drive5.com/usearch/)
 
 #### Database used:
-* Alves et al., 2018, Nature Communications (Supplementary Information)
+* [Alves et al., 2018, Nature Communications](https://www.nature.com/articles/s41467-018-03861-1)
 
 #### 1) Preparing the data
 
