@@ -24,7 +24,7 @@ Finally, we performed a NMDS analysis to understand how AOA communities were str
 
 #### Selected outputs
 * all the plots can be found [here](plots/)
-* all the other output files (except the filtered reads, too big) can be found [here](/outputs)
+* all the other output files (except the filtered reads, too big) can be found [here](/output_files)
 
 #### Software used:
 * DADA2 v1.6.0 (https://benjjneb.github.io/dada2/index.html)
