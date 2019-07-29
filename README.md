@@ -18,9 +18,9 @@ Based on the archaeal *amoA* phylogeny of [Alves *et al*. (2018)](https://www.na
 ##### [Step4: What are the abundances of the different AOA clades?](#4-what-are-the-abundances-of-the-different-aoa-clades-in-r)
 Here we calculated based on qPCR data the absolute abundances of AOA clades accross the different samples.
 ##### [Step5: Bubble plots](#5-bubble-plots)
-We produced bubble plots in R the illustrate the AOA communities structures.
+We produced bubble plots in R to illustrate the AOA communities structures.
 ##### [Step6: NMDS analysis](#6-nmds-analysis)
-Finally, we performed a NMDS analysis to understand how AOA communities were structured.
+Finally, we performed a NMDS analysis to understand how AOA communities are structured.
 
 #### Selected outputs
 * all the plots can be found [here](plots/)
@@ -39,7 +39,7 @@ Finally, we performed a NMDS analysis to understand how AOA communities were str
 
 * Place all the fastq.bz2 files in one folder '0/raw_data'. Used the the reads trimmed from any non-biological sequences.
 * Rename them if needed.
-* Convert the fastq files into fastq (on the terminal):
+* Uncompress bz2 fastq files (on the terminal):
 
 ```bash
 bzip2 -d 0/raw_data*.bz2
@@ -214,7 +214,7 @@ usearch8 -usearch_global 2-uniques_nochim.fasta -db $db_seq -id 0.55 -strand plu
 
 ##### 3.2) UCHIME chimera filtration (using parameters defined by [Alves et al., 2018](https://www.nature.com/articles/s41467-018-03861-1))
 
-For this step, USEARCH v.8 must be used. The latter versions use UCHIME2 instead of UCHIME, for which it is not possible anymore to specifiy the ```-mindiv``` and ```-minh```.
+For this step, USEARCH v.8 must be used. The latter versions use UCHIME2 instead of UCHIME, for which it is not anymore possible to specifiy  ```-mindiv``` and ```-minh``` parameters.
 ```bash
 usearch8 -uchime_ref  4b-uniques_nochim_match.fasta -db $chimera_db \
 -nonchimeras 5a-uniques_nochim_match_uchimed.fasta -strand plus -mindiv 1.7 -minh 0.1 -uchimeout 5b-uchime_report.txt
@@ -241,7 +241,7 @@ grep -c Unassigned 6-uniques_nochim_match_uchimed_uclust_annotation/5a-uniques_n
 ## 0
 ```
 ##### 3.4) Removing ASVs annotated as 'NS-Alpha-3.2.1.1.1.1.1.1_OTU'
-This reference OTU correspond the Nitrospheara viennensis, which was used as a positive control for PCRs prior to sequencing. So they likely represent cross-contaminations.
+This reference OTU corresponds to the Nitrospheara viennensis, which was used as a positive control for PCRs prior to sequencing. So this OTU is assumed to be a cross contamination.
 * List of clean ASVs
 ```bash
 grep -v NS-Alpha-3.2.1.1.1.1.1.1_OTU3 \
@@ -329,7 +329,7 @@ tax$V2 <- NULL
 tax2 <- as.data.frame(apply(tax, 2, function(x) gsub("^$|^ $", NA, x)))
 ```
 
-* Remove columns containing only 'NA'
+* Remove columns containing only ```NA```
 ```r
 col_to_remove <- c()
 
@@ -412,7 +412,7 @@ l2.tax[,1:10]
 write.table(l2.tax, "9b-l2_table_rel.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 ```
 ##### 4.3) Aggregate the ASV table by taxonomic annotations
-* First define for each replicate which sample it belongs to.
+* First, define for each replicate which sample it belongs to.
 ```r
 replicates_list <- c("peat02", "peat05", "peat08", "peat17", "peat30",
                      "peat31", "peat32", "peat33", "peat38", "peat39",
@@ -626,7 +626,7 @@ dev.off()
 ![](plots/asv_bubble_plot.svg)
 
 ##### 5.2) Reference-OTUs bubble plots
-* For this plot we will aggregate level-5 taxonomic annotation so we will end up with 3 categories only
+* For this plot we will aggregate level-5 taxonomic annotation. We will end up with 3 categories only
 ```r
 l5.tax <- aggregate(asv.tax[,2:19], by=list(annotation=asv.tax$l5_tax), FUN=sum)
 ```
@@ -723,7 +723,7 @@ asv.tax.t$veg_shp <- rep(NA, nrow(asv.tax.t))
 asv.tax.t$veg_shp[asv.tax.t$vegetation == "BS"] <- 1
 asv.tax.t$veg_shp[asv.tax.t$vegetation == "VS"] <- 2
 ```
-* Permanova test: are samples significantly different from each other when grouped by site or by vegetatio ?
+* Permanova test: are samples significantly different from each other when grouped by site or by vegetation ?
 ```r
 library("vegan")
 asv.bray <- as.data.frame(as.matrix(vegdist(asv.tax.t[,1:(ncol(asv.tax.t)-6)], diag = TRUE, upper = TRUE)))
