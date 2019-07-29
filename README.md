@@ -5,14 +5,14 @@ Written by alexandre.bagnoud@gmail.com and henri.siljanen@uef.fi in May 2018
 This script was used for analyzing archaeal amoA amplicon sequences generated with the primers pair CamoaA-19F and TamoA-629R-2 and sequenced with Illumina MiSeq with a 2x300 bp configuration.
 These data were published here:
 
-*add here the reference of the article once published*
+*Henri M.P. Siljanena, Ricardo J.E. Alves, Jussi G. Ronkainen, Richard E. Lamprecht, Hem R. Bhattarai, Alexandre Bagnoud, Maija E. Marushchak, Pertti J. Martikainen, Christa Schleper & Christina Biasi (2019)*. **Archaeal nitrification is a key driver of high nitrous oxide emissions from arctic peatlands.** Soil Biology and Biochemistry.
 
 #### Main steps
 
 ##### [Step1: Preparing the data](#1-preparing-the-data)
 Here we simply put all fastq files in the same folder, rename them and decompress them.
 ##### [Step2: DADA2 pipeline](#2-dada2-pipeline-in-r)
-Here we ran DADA2 according to the official [tutorial](https://benjjneb.github.io/dada2/tutorial.html).
+Here we ran DADA2 according to the official [tutorial](https://benjjneb.github.io/dada2/tutorial.html) (which corresponds to version 1.6).
 ##### [Step3: Further chimera filtration and annotations of ASVs sequences](#3-further-chimera-filtration-and-annotations-of-asvs-sequences-in-the-terminal)
 Based on the archaeal *amoA* phylogeny of [Alves *et al*. (2018)](https://www.nature.com/articles/s41467-018-03861-1), we excluded additional chimeras with a reference-based method and we annotated ASVs.
 ##### [Step4: What are the abundances of the different AOA clades?](#4-what-are-the-abundances-of-the-different-aoa-clades-in-r)
