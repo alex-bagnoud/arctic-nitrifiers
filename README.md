@@ -5,7 +5,9 @@ Written by alexandre.bagnoud@gmail.com and henri.siljanen@uef.fi in May 2018
 This script was used for analyzing archaeal amoA amplicon sequences generated with the primers pair CamoaA-19F and TamoA-629R-2 and sequenced with Illumina MiSeq with a 2x300 bp configuration.
 These data were published here:
 
-*Henri M.P. Siljanena, Ricardo J.E. Alves, Jussi G. Ronkainen, Richard E. Lamprecht, Hem R. Bhattarai, Alexandre Bagnoud, Maija E. Marushchak, Pertti J. Martikainen, Christa Schleper & Christina Biasi (2019)*. **Archaeal nitrification is a key driver of high nitrous oxide emissions from arctic peatlands.** Soil Biology and Biochemistry.
+*Henri M.P. Siljanena, Ricardo J.E. Alves, Jussi G. Ronkainen, Richard E. Lamprecht, Hem R. Bhattarai, Alexandre Bagnoud, Maija E. Marushchak, Pertti J. Martikainen, Christa Schleper & Christina Biasi (2019)*. **Archaeal nitrification is a key driver of high nitrous oxide emissions from arctic peatlands.** Soil Biology and Biochemistry, Volume 137, October 2019.
+
+https://doi.org/10.1016/j.soilbio.2019.107539
 
 #### Main steps
 
